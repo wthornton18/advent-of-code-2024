@@ -1,0 +1,13 @@
+[package]
+name = "aoc-2024"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ahash = "0.8.11"
+itertools = "0.13.0"
+num_cpus = "1.16.0"
+rayon = "1.10.0"
+
+[dev-dependencies]
+rstest = "0.23.0"
