@@ -8,13 +8,13 @@ This is a project for Advent of Code 2024. The goal is to first solve the puzzle
 All the rust code can be run using the following command:
 
 ```bash
-cargo run --release --bin q<day>_part<part>
+cargo run --release --bin q<day>_part_<part>
 ```
 
 Where `<day>` is the day of the puzzle and `<part>` is the part of the puzzle. For example, to run day 1 part 1, you would run:
 
 ```bash
-cargo run --release --bin 1_part1
+cargo run --release --bin q1_part_1
 
 ```
 
