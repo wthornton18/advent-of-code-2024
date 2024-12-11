@@ -42,7 +42,7 @@ int parse_input(char *buffer, long length, int **arr, int **other_arr, long *lin
     int arr_index = 0;
     int for_first_arr = 1;
 
-    for (int i = 0; i < length; i++)
+    for (int i = 0; i < length && arr_index < *lines; i++)
     {
 
         if (buffer[i] == '\n')

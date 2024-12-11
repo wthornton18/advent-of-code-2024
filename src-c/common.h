@@ -1,6 +1,9 @@
 #include <errno.h>
 #include <stdio.h>
 
+#ifndef COMMON_H
+#define COMMON_H
+
 int read_file_to_buffer(char **buffer, char *filename, long *length)
 {
     int seek;
@@ -49,3 +52,5 @@ int read_file_to_buffer(char **buffer, char *filename, long *length)
 
     return 0;
 }
+
+#endif
