@@ -3,59 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include "common.h"
 
 int compare(const void *a, const void *b)
 {
     return (*(int *)a - *(int *)b);
-}
-
-int read_file_to_buffer(char **buffer, char *filename, long *length)
-{
-    int seek;
-    FILE *f = fopen(filename, "r");
-    if (!f)
-    {
-        printf("Error: %s\n", strerror(errno));
-        return errno;
-    };
-
-    seek = fseek(f, 0, SEEK_END);
-    if (seek != 0)
-    {
-        fclose(f);
-        return errno;
-    }
-    *length = ftell(f);
-    if (*length < 0)
-    {
-        fclose(f);
-        return errno;
-    }
-
-    seek = fseek(f, 0, SEEK_SET);
-
-    if (seek != 0)
-    {
-        fclose(f);
-        return errno;
-    }
-
-    *buffer = malloc(*length);
-    if (!*buffer)
-    {
-        fclose(f);
-        return ENOMEM;
-    }
-
-    int read = fread(*buffer, 1, *length, f);
-    if (read != *length)
-    {
-        fclose(f);
-        return errno;
-    }
-    fclose(f);
-
-    return 0;
 }
 
 int parse_input(char *buffer, long length, int **arr, int **other_arr, long *lines)
