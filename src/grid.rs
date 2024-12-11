@@ -104,6 +104,50 @@ impl<K: Copy> Grid<K> {
             Some(self[(row, col)])
         }
     }
+
+    pub fn adjacent_indices(
+        &self,
+        (row, col): (usize, usize),
+        diagonals: bool,
+    ) -> Vec<(usize, usize)> {
+        let mut indices = Vec::with_capacity(8);
+
+        if row > 0 {
+            indices.push((row - 1, col));
+        }
+
+        if col > 0 {
+            indices.push((row, col - 1));
+        }
+
+        if row + 1 < self.rows {
+            indices.push((row + 1, col));
+        }
+
+        if col + 1 < self.cols {
+            indices.push((row, col + 1));
+        }
+
+        if diagonals {
+            if row > 0 && col > 0 {
+                indices.push((row - 1, col - 1));
+            }
+
+            if row > 0 && col + 1 < self.cols {
+                indices.push((row - 1, col + 1));
+            }
+
+            if row + 1 < self.rows && col > 0 {
+                indices.push((row + 1, col - 1));
+            }
+
+            if row + 1 < self.rows && col + 1 < self.cols {
+                indices.push((row + 1, col + 1));
+            }
+        }
+
+        indices
+    }
 }
 
 impl<K: Copy> Index<(usize, usize)> for Grid<K> {
