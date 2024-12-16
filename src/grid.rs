@@ -244,3 +244,26 @@ impl BitOrAssign for Grid<bool> {
         }
     }
 }
+
+impl Grid<bool> {
+    pub fn shannon_entropy(&self) -> f64 {
+        let mut count = 0;
+        for i in 0..self.rows {
+            for j in 0..self.cols {
+                if self[(i, j)] {
+                    count += 1;
+                }
+            }
+        }
+
+        let total = self.rows * self.cols;
+        let p = count as f64 / total as f64;
+        let q = 1.0 - p;
+
+        if p == 0.0 || q == 0.0 {
+            return 0.0;
+        }
+
+        -p * p.log2() - q * q.log2()
+    }
+}
