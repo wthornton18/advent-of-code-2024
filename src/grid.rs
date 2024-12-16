@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{BitOr, Index, IndexMut},
+    ops::{BitAndAssign, BitOr, BitOrAssign, Index, IndexMut},
 };
 
 #[derive(Default, Clone)]
@@ -229,5 +229,18 @@ impl BitOr for Grid<bool> {
         }
 
         result
+    }
+}
+
+impl BitOrAssign for Grid<bool> {
+    fn bitor_assign(&mut self, rhs: Self) {
+        assert_eq!(self.rows, rhs.rows);
+        assert_eq!(self.cols, rhs.cols);
+
+        for i in 0..self.rows {
+            for j in 0..self.cols {
+                self[(i, j)] |= rhs[(i, j)];
+            }
+        }
     }
 }

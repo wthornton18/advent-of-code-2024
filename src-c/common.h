@@ -10,7 +10,6 @@ int read_file_to_buffer(char **buffer, char *filename, long *length)
     FILE *f = fopen(filename, "r");
     if (!f)
     {
-        printf("Error: %s\n", strerror(errno));
         return errno;
     };
 

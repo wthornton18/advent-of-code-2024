@@ -353,7 +353,7 @@ int main(void)
     int read = read_file_to_buffer(&buffer, "data/q3.txt", &length);
     if (read != 0)
     {
-        printf("Error: %s\n", strerror(errno));
+        printf("Error: %s\n", strerror(read));
         return read;
     }
 
