@@ -1,6 +1,5 @@
 ## Overview
-
-![Rust](https://github.comwthornton18/advent-of-code-2024?/actions/workflows/rust.yml/badge.svg?branch=main)
+![example branch parameter](https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=feature-1)
 
 This is a project for Advent of Code 2024. The goal is to first solve the puzzles in Rust, and then attempt to solve them in C. The puzzles are released daily, and I will attempt to solve them as soon as possible (UK time so GMT or BST).
 
