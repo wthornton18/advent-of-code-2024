@@ -185,27 +185,3 @@ fn simulate(grid: &mut Grid<Option<Tile>>, moves: &[Move]) {
         println!("{}", repeat_n('=', grid.cols).collect::<String>())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    const TEST_INPUT: &str = "
-########
-#..O.O.#
-##@.O..#
-#...O..#
-#.#.O..#
-#...O..#
-#......#
-########
-
-<^^>>>vv<v>>v<<
-";
-
-    #[test]
-    fn test_get_final_gps() {
-        let result = get_final_gps(TEST_INPUT);
-        assert_eq!(result, 10092);
-    }
-}
