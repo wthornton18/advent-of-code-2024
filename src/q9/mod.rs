@@ -1,7 +1,7 @@
 mod disk;
 use disk::{Checksum, Disk, SimpleDisk};
 use std::str::FromStr;
-
+#[allow(dead_code)]
 fn pretty_print_disk(input: &[Option<usize>]) {
     for elem in input {
         match elem {

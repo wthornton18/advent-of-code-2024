@@ -38,11 +38,6 @@ impl<K, W> Graph<K, W>
 where
     K: Eq + Hash + Clone,
 {
-    pub fn add_vertex(&mut self, vertex: K) {
-        self.vertices.insert(vertex.clone());
-        self.edges.insert(vertex, Vec::new());
-    }
-
     pub fn add_edge(&mut self, from: K, to: K, weight: W) {
         self.vertices.insert(from.clone());
         self.vertices.insert(to.clone());
@@ -63,24 +58,6 @@ where
 
     fn index(&self, index: K) -> &Self::Output {
         &self.edges[&index]
-    }
-}
-
-impl<K, W> Graph<K, W>
-where
-    K: Eq + Hash + Clone,
-    W: Clone,
-{
-    pub fn reverse(&self) -> Self {
-        let mut reversed = Graph::new();
-
-        for (from, edges) in &self.edges {
-            for (to, weight) in edges {
-                reversed.add_edge(to.clone(), from.clone(), weight.clone());
-            }
-        }
-
-        reversed
     }
 }
 
@@ -138,6 +115,7 @@ where
 
         impl<K> Eq for Elem<K> {}
 
+        #[allow(clippy::non_canonical_partial_ord_impl)]
         impl<K> PartialOrd for Elem<K> {
             fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
                 self.priority.partial_cmp(&other.priority)

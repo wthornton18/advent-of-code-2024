@@ -29,7 +29,7 @@ pub fn count_safe_reports_with_removal(input: &str) -> usize {
 
     let mut safe_count = safeties.iter().filter(|&&s| s).count();
 
-    for (k, report) in reports.iter().enumerate().filter(|(i, _)| !safeties[*i]) {
+    for (_, report) in reports.iter().enumerate().filter(|(i, _)| !safeties[*i]) {
         let mut safe = false;
 
         for i in 0..report.len() {

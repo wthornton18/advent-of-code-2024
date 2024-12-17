@@ -100,8 +100,6 @@ pub fn get_total_number_of_cycles(input: &str) -> usize {
 pub fn get_total_number_of_cycles_parallel(input: &str) -> usize {
     let (grid, initial_guard_position) = parse_input(input);
 
-    let mut total_number_of_cycles = 0;
-
     let mut new_grids: Vec<Grid<Tile>> = Vec::new();
 
     for i in 0..grid.rows {
@@ -114,18 +112,14 @@ pub fn get_total_number_of_cycles_parallel(input: &str) -> usize {
         }
     }
 
-    total_number_of_cycles = new_grids
+    new_grids
         .par_iter()
         .map(|new_grid| contains_cycle(new_grid, initial_guard_position) as usize)
-        .sum();
-
-    total_number_of_cycles
+        .sum()
 }
 
 pub fn get_total_number_of_cycles_parallel_chunked(input: &str) -> usize {
     let (grid, initial_guard_position) = parse_input(input);
-
-    let mut total_number_of_cycles = 0;
 
     let mut new_grids: Vec<Grid<Tile>> = Vec::new();
 
@@ -141,7 +135,7 @@ pub fn get_total_number_of_cycles_parallel_chunked(input: &str) -> usize {
 
     let num_cpus = num_cpus::get();
 
-    total_number_of_cycles = new_grids
+    new_grids
         .par_chunks(num_cpus)
         .map(|chunk| {
             chunk
@@ -149,9 +143,7 @@ pub fn get_total_number_of_cycles_parallel_chunked(input: &str) -> usize {
                 .map(|new_grid| contains_cycle(new_grid, initial_guard_position) as usize)
                 .sum::<usize>()
         })
-        .sum();
-
-    total_number_of_cycles
+        .sum()
 }
 
 fn compute_guard_path(grid: &mut Grid<Tile>, start_position: (usize, usize)) {

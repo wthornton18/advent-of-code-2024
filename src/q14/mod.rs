@@ -1,7 +1,4 @@
-use std::usize;
-
 use robot::{Quadrant, Robot};
-
 
 mod robot;
 

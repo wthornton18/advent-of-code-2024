@@ -1,5 +1,5 @@
 use crate::{grid::Grid, vec2::Vec2};
-use std::{str::FromStr, usize};
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Quadrant {

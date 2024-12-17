@@ -25,10 +25,6 @@ pub trait Tokenizer: Iterator {
         self.get_source().get(n).copied()
     }
 
-    fn maybe_peek(&self) -> Option<Self::K> {
-        self.get_source().first().copied()
-    }
-
     fn advance_while(&mut self, predicate: impl Fn(Self::K) -> bool) -> usize {
         let mut n = 0;
 
