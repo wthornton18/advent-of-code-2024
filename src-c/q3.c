@@ -275,14 +275,14 @@ int compile(char *buffer, token *tokens, long token_count, expr **expressions, l
         }
         else if (tokens_startswith(tokens, token_count, (token_type[]){DO, LEFT_PAREN, RIGHT_PAREN}, 3, i))
         {
-            expr e = {DO_EXPR, {0}};
+            expr e = {DO_EXPR, {{0}}};
             (*expressions)[expr_index] = e;
             i += 3;
             expr_index++;
         }
         else if (tokens_startswith(tokens, token_count, (token_type[]){DONT, LEFT_PAREN, RIGHT_PAREN}, 3, i))
         {
-            expr e = {DONT_EXPR, {0}};
+            expr e = {DONT_EXPR, {{0}}};
             (*expressions)[expr_index] = e;
             i += 3;
             expr_index++;

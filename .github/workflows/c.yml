@@ -1,10 +1,14 @@
-name: C/C++ CI
+name: C
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    paths:
+      - '*.c'
+      - '.github/workflows/c.yml'
+      - 'test-c/**'
+      - 'data/**'
+      - 'Makefile'
+  
 
 jobs:
   build:
