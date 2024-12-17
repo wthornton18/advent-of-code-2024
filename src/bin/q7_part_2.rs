@@ -15,6 +15,6 @@ mod tests {
     fn test_get_satisfiable_equation_target_all() {
         let input = read_to_string("data/q7.txt").expect("Error reading file");
         let result = get_satisfiable_equation_target_all(&input);
-        assert_eq!(result, 177531);
+        assert_eq!(result, 92612386119138);
     }
 }
