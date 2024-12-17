@@ -4,13 +4,13 @@ use std::{
 };
 
 #[derive(Default, Clone)]
-pub struct Grid<K: Copy> {
+pub struct Grid<K: Clone> {
     pub rows: usize,
     pub cols: usize,
     pub data: Vec<K>,
 }
 
-impl<K: Display + Copy> Display for Grid<K> {
+impl<K: Display + Clone> Display for Grid<K> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for i in 0..self.rows {
             for j in 0..self.cols {
@@ -23,7 +23,7 @@ impl<K: Display + Copy> Display for Grid<K> {
     }
 }
 
-impl<K: Copy> Grid<K> {
+impl<K: Clone> Grid<K> {
     pub fn new() -> Self {
         Self {
             rows: 0,
@@ -33,7 +33,7 @@ impl<K: Copy> Grid<K> {
     }
 }
 
-impl<K: Copy> Grid<K> {
+impl<K: Clone> Grid<K> {
     pub fn with_capacity(rows: usize, cols: usize) -> Self {
         Self {
             rows,
@@ -51,7 +51,7 @@ impl<K: Copy> Grid<K> {
     }
 }
 
-impl<K: Copy> Grid<K> {
+impl<K: Clone> Grid<K> {
     pub fn push(&mut self, row: &[K]) {
         if self.cols == 0 {
             self.cols = row.len();
@@ -70,7 +70,7 @@ impl<K: Copy> Grid<K> {
         for i in 0..self.rows {
             for j in 0..self.cols {
                 result[(i, j)] = if mask[(i, j)] {
-                    Some(self[(i, j)])
+                    Some(self[(i, j)].clone())
                 } else {
                     None
                 };
@@ -89,7 +89,7 @@ impl<K: Copy> Grid<K> {
         for i in 0..self.rows {
             for j in 0..self.cols {
                 if mask[(i, j)] {
-                    result[(i, j)] = self[(i, j)];
+                    result[(i, j)] = self[(i, j)].clone();
                 }
             }
         }
@@ -101,8 +101,50 @@ impl<K: Copy> Grid<K> {
         if row >= self.rows || col >= self.cols {
             None
         } else {
-            Some(self[(row, col)])
+            Some(self[(row, col)].clone())
         }
+    }
+
+    pub fn deltas(&self, (row, col): (usize, usize), diagonals: bool) -> Vec<(i32, i32)> {
+        // Gives only valid deltas from the given position
+
+        let mut deltas = Vec::with_capacity(8);
+
+        if row > 0 {
+            deltas.push((-1, 0));
+        }
+
+        if col > 0 {
+            deltas.push((0, -1));
+        }
+
+        if row + 1 < self.rows {
+            deltas.push((1, 0));
+        }
+
+        if col + 1 < self.cols {
+            deltas.push((0, 1));
+        }
+
+        if diagonals {
+            if row > 0 && col > 0 {
+                deltas.push((-1, -1));
+            }
+
+            if row > 0 && col + 1 < self.cols {
+                deltas.push((-1, 1));
+            }
+
+            if row + 1 < self.rows && col > 0 {
+                deltas.push((1, -1));
+            }
+
+            if row + 1 < self.rows && col + 1 < self.cols {
+                deltas.push((1, 1));
+            }
+        }
+
+        deltas
     }
 
     pub fn adjacent_indices(
@@ -148,9 +190,19 @@ impl<K: Copy> Grid<K> {
 
         indices
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.rows == 0 || self.cols == 0
+    }
+
+    pub fn swap(&mut self, pos: (usize, usize), other: (usize, usize)) {
+        unsafe {
+            std::ptr::swap(&mut self[(pos.0, pos.1)], &mut self[(other.0, other.1)]);
+        }
+    }
 }
 
-impl<K: Copy> Index<(usize, usize)> for Grid<K> {
+impl<K: Clone> Index<(usize, usize)> for Grid<K> {
     type Output = K;
 
     fn index(&self, (row, col): (usize, usize)) -> &Self::Output {
@@ -158,7 +210,7 @@ impl<K: Copy> Index<(usize, usize)> for Grid<K> {
     }
 }
 
-impl<K: Copy> Index<std::ops::RangeFrom<usize>> for Grid<K> {
+impl<K: Clone> Index<std::ops::RangeFrom<usize>> for Grid<K> {
     type Output = [K];
 
     fn index(&self, range: std::ops::RangeFrom<usize>) -> &Self::Output {
@@ -166,13 +218,13 @@ impl<K: Copy> Index<std::ops::RangeFrom<usize>> for Grid<K> {
     }
 }
 
-impl<K: Copy> IndexMut<(usize, usize)> for Grid<K> {
+impl<K: Clone> IndexMut<(usize, usize)> for Grid<K> {
     fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut Self::Output {
         &mut self.data[row * self.cols + col]
     }
 }
 
-impl<K: Copy> IntoIterator for Grid<K> {
+impl<K: Clone> IntoIterator for Grid<K> {
     type Item = ((usize, usize), K);
     type IntoIter = GridIterator<K>;
 
@@ -184,13 +236,13 @@ impl<K: Copy> IntoIterator for Grid<K> {
         }
     }
 }
-pub struct GridIterator<K: Copy> {
+pub struct GridIterator<K: Clone> {
     grid: Grid<K>,
     current_row: usize,
     current_col: usize,
 }
 
-impl<K: Copy> Iterator for GridIterator<K> {
+impl<K: Clone> Iterator for GridIterator<K> {
     type Item = ((usize, usize), K);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -200,7 +252,7 @@ impl<K: Copy> Iterator for GridIterator<K> {
 
         let result = (
             (self.current_row, self.current_col),
-            self.grid[(self.current_row, self.current_col)],
+            self.grid[(self.current_row, self.current_col)].clone(),
         );
 
         self.current_col += 1;

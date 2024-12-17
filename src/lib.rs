@@ -1,5 +1,7 @@
 mod branch_magic;
+mod fibonacci_heap;
 pub mod file_utils;
+mod graph;
 mod grid;
 pub mod q1;
 pub mod q10;
@@ -7,6 +9,8 @@ pub mod q11;
 pub mod q12;
 pub mod q13;
 pub mod q14;
+pub mod q15;
+pub mod q16;
 pub mod q2;
 pub mod q3;
 pub mod q4;

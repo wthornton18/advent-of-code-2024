@@ -21,7 +21,7 @@ fn parse_input(input: &str) -> Vec<Robot> {
     robots
 }
 
-pub fn get_lowest_safety_factor(input: &str, constraints: (i128, i128)) -> usize {
+pub fn get_lowest_safety_factor_idx(input: &str, constraints: (i128, i128)) -> usize {
     let mut robots = parse_input(input);
 
     let mut lowest_safety_score = usize::MAX;
@@ -37,15 +37,6 @@ pub fn get_lowest_safety_factor(input: &str, constraints: (i128, i128)) -> usize
         if safety_factor < lowest_safety_score {
             lowest_safety_score = safety_factor;
             idx = i;
-            let grid = Grid::from(robots.as_slice());
-            let entropy = grid.shannon_entropy();
-
-            let display_grid = Grid::with_capacity_and_default(grid.rows, grid.cols, '#');
-            let display_grid = display_grid.mask_or_default(grid.clone(), '.');
-            print!("{}", display_grid);
-            println!("Safety Score: {safety_factor}");
-            println!("Entropy: {entropy}");
-            println!("{}", repeat_n("=", grid.cols).collect::<String>())
         }
     }
 

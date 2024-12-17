@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 ahash = "0.8.11"
 hashbrown = "0.15.2"
+if_chain = "1.0.2"
 itertools = "0.13.0"
 num_cpus = "1.16.0"
 rayon = "1.10.0"

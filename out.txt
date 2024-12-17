@@ -1,0 +1,17 @@
+
+running 1 test
+test q16::tests::test_get_area_covered_by_shortest_paths::case_1 ... FAILED
+
+failures:
+
+---- q16::tests::test_get_area_covered_by_shortest_paths::case_1 stdout ----
+thread 'q16::tests::test_get_area_covered_by_shortest_paths::case_1' panicked at src/graph.rs:195:37:
+no entry found for key
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    q16::tests::test_get_area_covered_by_shortest_paths::case_1
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 41 filtered out; finished in 0.01s
+
