@@ -14,6 +14,6 @@ mod tests {
     fn test_get_safety_factor() {
         let input = read_to_string("data/q14.txt").expect("Failed to read file");
         let result = get_safety_factor(&input, 100, (101, 103));
-        assert_eq!(result, 100);
+        assert_eq!(result, 214109808);
     }
 }

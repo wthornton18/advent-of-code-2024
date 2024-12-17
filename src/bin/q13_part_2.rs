@@ -15,6 +15,6 @@ mod tests {
     fn test_get_total_number_of_tokens_position_correction() {
         let input = read_to_string("data/q13.txt").expect("Failed to read file");
         let result = get_total_number_of_tokens_position_correction(&input);
-        assert_eq!(result, 36758);
+        assert_eq!(result, 76358113886726);
     }
 }
