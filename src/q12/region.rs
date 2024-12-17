@@ -41,7 +41,7 @@ impl Region {
         perimeter
     }
 
-    fn sides(&self) -> usize {
+    fn corners(&self) -> usize {
         let (mut min_x, mut min_y) = (usize::MAX, usize::MAX);
         let (mut max_x, mut max_y) = (0, 0);
 
@@ -56,9 +56,56 @@ impl Region {
         for (x, y) in &self.coords {
             grid[(*x - min_x + 1, *y - min_y + 1)] = self.plant_type;
         }
-        // Count the number of 'turns' we have to make to continue, start at a given edge
 
-        0
+        let mut corners = 0;
+
+        for coord in &self.coords {
+            let x = coord.0 - min_x + 1;
+            let y = coord.1 - min_y + 1;
+
+            let north_empty = grid[(x, y - 1)] == '.';
+            let south_empty = grid[(x, y + 1)] == '.';
+            let west_empty = grid[(x - 1, y)] == '.';
+            let east_empty = grid[(x + 1, y)] == '.';
+            let north_east_empty = grid[(x + 1, y - 1)] == '.';
+            let north_west_empty = grid[(x - 1, y - 1)] == '.';
+            let south_east_empty = grid[(x + 1, y + 1)] == '.';
+            let south_west_empty = grid[(x - 1, y + 1)] == '.';
+
+            if north_empty && west_empty {
+                corners += 1;
+            }
+
+            if north_empty && east_empty {
+                corners += 1;
+            }
+
+            if south_empty && west_empty {
+                corners += 1;
+            }
+
+            if south_empty && east_empty {
+                corners += 1;
+            }
+
+            if !north_empty && !west_empty && north_west_empty {
+                corners += 1;
+            }
+
+            if !north_empty && !east_empty && north_east_empty {
+                corners += 1;
+            }
+
+            if !south_empty && !west_empty && south_west_empty {
+                corners += 1;
+            }
+
+            if !south_empty && !east_empty && south_east_empty {
+                corners += 1;
+            }
+        }
+
+        corners
     }
 
     pub fn price(&self) -> usize {
@@ -66,7 +113,7 @@ impl Region {
     }
 
     pub fn discounted_price(&self) -> usize {
-        self.area() * self.sides()
+        self.area() * self.corners()
     }
 }
 

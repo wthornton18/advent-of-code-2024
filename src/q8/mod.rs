@@ -21,6 +21,7 @@ fn parse_input(input: &str) -> Grid<u8> {
 
     grid
 }
+
 #[allow(dead_code)]
 fn display_signal_grid(signal_grid: &Grid<u8>) {
     for i in 0..signal_grid.rows {
