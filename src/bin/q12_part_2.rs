@@ -12,9 +12,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_total_garden_price() {
+    fn test_get_total_garden_discounted_price() {
         let input = read_to_string("data/q12.txt").unwrap();
         let result = get_total_garden_discounted_price(&input);
-        assert_eq!(result, 1533024);
+        assert_eq!(result, 910066);
     }
 }
