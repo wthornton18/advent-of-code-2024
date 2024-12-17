@@ -1,5 +1,4 @@
 mod branch_magic;
-mod fibonacci_heap;
 pub mod file_utils;
 mod graph;
 mod grid;
