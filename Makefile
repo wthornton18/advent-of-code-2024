@@ -14,7 +14,7 @@ q1run: q1
 	rm q1.o
 q1test: q1
 	./q1.o > q1.out
-	diff q1.out test-c/q1.exp && echo "Q1 ${TEST_PASSED}" || echo "Q1 ${TEST_FAILED}"
+	diff q1.out test-c/q1.exp && echo "Q1 ${TEST_PASSED}" || (echo "Q1 ${TEST_FAILED}" && exit 1)
 	rm q1.out
 	rm q1.o
 q1gen_test: q1
@@ -26,7 +26,7 @@ q2run: q2
 	rm q2.o
 q2test: q2
 	./q2.o > q2.out
-	diff q2.out test-c/q2.exp && echo "Q2 ${TEST_PASSED}" || echo "Q2 ${TEST_FAILED}"
+	diff q2.out test-c/q2.exp && echo "Q2 ${TEST_PASSED}" || (echo "Q2 ${TEST_FAILED}" && exit 1)
 	rm q2.out
 	rm q2.o
 q2gen_test: q2
@@ -39,7 +39,7 @@ q3run: q3
 	rm q3.o
 q3test: q3
 	./q3.o > q3.out
-	diff q3.out test-c/q3.exp && echo "Q3 ${TEST_PASSED}" || echo "Q3 ${TEST_FAILED}"
+	diff q3.out test-c/q3.exp && echo "Q3 ${TEST_PASSED}" || (echo "Q3 ${TEST_FAILED}" && exit 1)
 	rm q3.out
 	rm q3.o
 q3gen_test: q3
@@ -52,7 +52,7 @@ q4run: q4
 	rm q4.o
 q4test: q4
 	./q4.o > q4.out
-	diff q4.out test-c/q4.exp && echo "Q4 ${TEST_PASSED}" || echo "Q4 ${TEST_FAILED}"
+	diff q4.out test-c/q4.exp && echo "Q4 ${TEST_PASSED}" || (echo "Q4 ${TEST_FAILED}" && exit 1)
 	rm q4.out
 	rm q4.o
 q4gen_test: q4
