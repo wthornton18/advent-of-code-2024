@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, str::FromStr};
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Constraint {

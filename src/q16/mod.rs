@@ -1,14 +1,10 @@
 use core::f64;
-use std::{
-    cmp::{Ordering, Reverse},
-    collections::BinaryHeap,
-    fmt::Display,
-};
+use std::fmt::Display;
 
 use hashbrown::HashMap;
 
 use crate::{
-    graph::{self, Graph, Weight},
+    graph::{Graph, Weight},
     grid::Grid,
 };
 

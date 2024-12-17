@@ -1,6 +1,5 @@
 use std::u8;
 
-use itertools::Itertools;
 
 use crate::grid::Grid;
 

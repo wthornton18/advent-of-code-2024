@@ -1,7 +1,5 @@
-use std::ops::RangeInclusive;
 mod disk;
 use disk::{Checksum, Disk, SimpleDisk};
-use itertools::{repeat_n, Itertools};
 use std::str::FromStr;
 
 fn pretty_print_disk(input: &[Option<usize>]) {

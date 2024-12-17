@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Mul, MulAssign, Rem, RemAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, Rem};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec2<K: Clone + Copy> {

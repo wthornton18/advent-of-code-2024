@@ -1,9 +1,7 @@
 use std::usize;
 
-use itertools::repeat_n;
 use robot::{Quadrant, Robot};
 
-use crate::grid::Grid;
 
 mod robot;
 

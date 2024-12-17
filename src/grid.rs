@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{BitAndAssign, BitOr, BitOrAssign, Index, IndexMut},
+    ops::{BitOr, BitOrAssign, Index, IndexMut},
 };
 
 #[derive(Default, Clone)]

@@ -1,4 +1,3 @@
-use crate::branch_magic::{likely, unlikely};
 use crate::grid::Grid;
 use rayon::prelude::*;
 
