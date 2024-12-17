@@ -1,6 +1,6 @@
 ## Overview
 
-![Rust](https://github.comwthornton18/advent-of-code-2024?/actions/workflows/rust.yml/badge.svg)
+![Rust](https://github.comwthornton18/advent-of-code-2024?/actions/workflows/rust.yml/badge.svg?branch=main)
 
 This is a project for Advent of Code 2024. The goal is to first solve the puzzles in Rust, and then attempt to solve them in C. The puzzles are released daily, and I will attempt to solve them as soon as possible (UK time so GMT or BST).
 
