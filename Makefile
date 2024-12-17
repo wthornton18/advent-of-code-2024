@@ -63,6 +63,11 @@ q5: src-c/q5.c
 q5run: q5
 	./q5.o
 	rm q5.o
+q5test: q5
+	./q5.o > q5.out
+	diff q5.out test-c/q5.exp && echo "Q5 ${TEST_PASSED}" || (echo "Q5 ${TEST_FAILED}" && exit 1)
+	rm q5.out
+	rm q5.o
 q5gen_test: q5
 	./q5.o > test-c/q5.exp
 	rm q5.o

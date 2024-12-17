@@ -27,18 +27,30 @@ typedef struct Updates
 
 } updates;
 
-int is_valid(constraint *c, int *updates, int start, int end)
+int get_updates_offset(updates *u, int update_idx)
+{
+    int total_offset = 0;
+    for (int i = 0; i < update_idx; i++)
+    {
+        total_offset += u->update_groups[i];
+    }
+    return total_offset;
+}
+
+int is_valid(constraint *c, updates *u, int update_idx)
 {
     int page_before_idx = -1;
     int page_after_idx = -1;
 
-    for (int i = start; i < end; i++)
+    int total_offset = get_updates_offset(u, update_idx);
+
+    for (int i = 0; i < u->update_groups[update_idx]; i++)
     {
-        if (updates[i] == c->page_before)
+        if (c->page_before == u->updates[total_offset + i])
         {
             page_before_idx = i;
         }
-        if (updates[i] == c->page_after)
+        if (c->page_after == u->updates[total_offset + i])
         {
             page_after_idx = i;
         }
@@ -50,6 +62,80 @@ int is_valid(constraint *c, int *updates, int start, int end)
     }
 
     return page_before_idx < page_after_idx;
+}
+
+int get_relevant_constraint(constraints *c, int page_before, int page_after)
+{
+    for (int i = 0; i < c->length; i++)
+    {
+        if (c->constraints[i].page_before == page_before && c->constraints[i].page_after == page_after)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int is_update_valid(constraints *c, updates *u, int update_idx)
+{
+    for (int i = 0; i < c->length; i++)
+    {
+        if (!is_valid(&c->constraints[i], u, update_idx))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int sort_temp_update_by_constraints(int *u, int length, constraints *c)
+{
+    int swapped = 0;
+    do
+    {
+        swapped = 0;
+        for (int i = 1; i < length; i++)
+        {
+            int a = u[i];
+            int b = u[i - 1];
+            int constraint_idx = get_relevant_constraint(c, a, b);
+            if (constraint_idx == -1)
+            {
+                // no constraint, no need to swap
+                continue;
+            }
+            constraint constraint = c->constraints[constraint_idx];
+            if (constraint.page_before == a)
+            {
+                u[i - 1] = a;
+                u[i] = b;
+                swapped = 1;
+            }
+        }
+    } while (swapped);
+    return 0;
+}
+
+int fix_update(constraints *c, updates *u, int update_idx)
+{
+    int *temp_updates = malloc(u->update_groups[update_idx] * sizeof(int));
+    if (!temp_updates)
+    {
+        return ENOMEM;
+    }
+    int offset = get_updates_offset(u, update_idx);
+    for (int i = 0; i < u->update_groups[update_idx]; i++)
+    {
+        temp_updates[i] = u->updates[offset + i];
+    }
+
+    sort_temp_update_by_constraints(temp_updates, u->update_groups[update_idx], c);
+
+    for (int i = 0; i < u->update_groups[update_idx]; i++)
+    {
+        u->updates[offset + i] = temp_updates[i];
+    }
+    return 0;
 }
 
 int parse_input(char *buffer, long length, constraints *c, updates *u)
@@ -170,7 +256,64 @@ int parse_input(char *buffer, long length, constraints *c, updates *u)
         return ENOMEM;
     }
 
+    for (int i = 0; i < updates_length; i++)
+    {
+        u->updates[i] = 0;
+    }
+
+    int update_index = 0;
+
+    for (int i = start; i < length; i++)
+    {
+        if (buffer[i] == '\n')
+        {
+            continue;
+        }
+        int update = 0;
+        while (buffer[i] != ',' && buffer[i] != '\n')
+        {
+            update = update * 10 + (buffer[i] - '0');
+            i++;
+        }
+        u->updates[update_index] = update;
+        update_index++;
+    }
+
     return 0;
+}
+
+int get_sum_of_middle_page_numbers(constraints *c, updates *u)
+{
+    int sum = 0;
+
+    for (int u_idx = 0; u_idx < u->update_group_length; u_idx++)
+    {
+        if (!is_update_valid(c, u, u_idx))
+        {
+            continue;
+        }
+        int total_offset = get_updates_offset(u, u_idx);
+        int middle_page = u->updates[total_offset + (u->update_groups[u_idx] / 2)];
+        sum += middle_page;
+    }
+    return sum;
+}
+
+int get_sum_of_middle_page_numbers_with_fix(constraints *c, updates *u)
+{
+    int sum = 0;
+
+    for (int u_idx = 0; u_idx < u->update_group_length; u_idx++)
+    {
+        if (!is_update_valid(c, u, u_idx))
+        {
+            fix_update(c, u, u_idx);
+            int total_offset = get_updates_offset(u, u_idx);
+            int middle_page = u->updates[total_offset + (u->update_groups[u_idx] / 2)];
+            sum += middle_page;
+        }
+    }
+    return sum;
 }
 
 int main(void)
@@ -196,6 +339,12 @@ int main(void)
         printf("Error: %s\n", strerror(parse));
         return read;
     }
+
+    int sum = get_sum_of_middle_page_numbers(&constraints, &update);
+    printf("Part 1: %d\n", sum);
+
+    int sum2 = get_sum_of_middle_page_numbers_with_fix(&constraints, &update);
+    printf("Part 2: %d\n", sum2);
 
     return 0;
 }
