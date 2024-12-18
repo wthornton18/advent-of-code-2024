@@ -2,10 +2,13 @@ use core::f64;
 use std::{
     collections::BinaryHeap,
     fmt::Display,
+    hash::Hash,
     ops::{BitOr, BitOrAssign, Index, IndexMut},
 };
 
 use hashbrown::HashMap;
+
+use crate::a_star_search::AStarSearch;
 
 #[derive(Default, Clone)]
 pub struct Grid<K: Clone> {
@@ -321,5 +324,38 @@ impl Grid<bool> {
         }
 
         -p * p.log2() - q * q.log2()
+    }
+}
+
+pub trait Tile {
+    fn traversable(&self) -> bool;
+    fn cost_from<V>(&self, other: V) -> f64
+    where
+        V: Tile;
+}
+
+impl<K> AStarSearch for Grid<K>
+where
+    K: Clone + Tile + Eq + Hash,
+{
+    type Node = (usize, usize);
+
+    fn weighted_neighbours(&self, node: &Self::Node) -> Option<Vec<(Self::Node, f64)>> {
+        let mut neighbours = Vec::new();
+        let tile = self.get(*node)?;
+        for delta in self.deltas(*node, false) {
+            let new_node = (
+                (node.0 as i32 + delta.0) as usize,
+                (node.1 as i32 + delta.1) as usize,
+            );
+
+            if let Some(new_tile) = self.get(new_node) {
+                if new_tile.traversable() {
+                    neighbours.push((new_node, new_tile.cost_from(tile.clone())));
+                }
+            }
+        }
+
+        Some(neighbours)
     }
 }

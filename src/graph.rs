@@ -6,6 +6,8 @@ use std::{fmt::Display, hash::Hash};
 
 use hashbrown::{HashMap, HashSet};
 
+use crate::a_star_search::AStarSearch;
+
 pub trait Weight {
     fn weight(&self) -> f64;
 }
@@ -248,77 +250,18 @@ where
     }
 }
 
-impl<K, W> Graph<K, W>
+impl<K, W> AStarSearch for Graph<K, W>
 where
-    K: Eq + Hash + Clone + Debug,
-    W: Weight + Debug,
+    K: Eq + Hash + Clone,
+    W: Weight + Debug + Clone,
 {
-    fn reconstruct_path(&self, came_from: HashMap<K, K>, goal: K) -> Vec<K> {
-        let mut current = goal;
-        let mut path = vec![current.clone()];
+    type Node = K;
 
-        while let Some(next) = came_from.get(&current) {
-            current = next.clone();
-            path.push(current.clone());
+    fn weighted_neighbours(&self, node: &Self::Node) -> Option<Vec<(Self::Node, f64)>> {
+        if let Some(edges) = self.edges.get(node) {
+            Some(edges.iter().map(|(v, w)| (v.clone(), w.weight())).collect())
+        } else {
+            None
         }
-
-        path.reverse();
-        path
-    }
-
-    pub fn a_star_search<H>(&self, source: K, target: K, heuristic: H) -> Vec<K>
-    where
-        H: Fn(K, K) -> f64,
-    {
-        struct Elem<K>(K, f64);
-        impl<K> PartialEq for Elem<K> {
-            fn eq(&self, other: &Self) -> bool {
-                self.1 == other.1
-            }
-        }
-        impl<K> Eq for Elem<K> {}
-        impl<K> Ord for Elem<K> {
-            fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-                self.1.partial_cmp(&other.1).unwrap().reverse()
-            }
-        }
-
-        impl<K> PartialOrd for Elem<K> {
-            fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-                Some(self.cmp(other))
-            }
-        }
-
-        let mut came_from = HashMap::new();
-        let mut g_score = HashMap::new();
-        let mut f_score = HashMap::new();
-        g_score.insert(source.clone(), 0.0);
-        f_score.insert(source.clone(), heuristic(source.clone(), target.clone()));
-
-        let mut open_set: BinaryHeap<Elem<K>> = BinaryHeap::new();
-        open_set.push(Elem(source.clone(), f_score[&source]));
-
-        while let Some(Elem(v, _)) = open_set.pop() {
-            if v == target {
-                return self.reconstruct_path(came_from, target);
-            }
-
-            if let Some(edges) = self.edges.get(&v) {
-                for (u, w) in edges {
-                    let tenative_g_score = g_score[&v] + w.weight();
-                    if tenative_g_score < *g_score.get(u).unwrap_or(&f64::INFINITY) {
-                        came_from.insert(u.clone(), v.clone());
-                        g_score.insert(u.clone(), tenative_g_score);
-                        f_score.insert(
-                            u.clone(),
-                            tenative_g_score + heuristic(u.clone(), target.clone()),
-                        );
-                        open_set.push(Elem(u.clone(), f_score[u]));
-                    }
-                }
-            }
-        }
-
-        Vec::new()
     }
 }

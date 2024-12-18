@@ -1,9 +1,29 @@
 use crate::{
-    graph::{self, Graph},
-    grid::Grid,
+    a_star_search::AStarSearch,
+    graph::Graph,
+    grid::{Grid, Tile},
 };
 use hashbrown::HashSet;
 use rayon::prelude::*;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Q18Tile {
+    Empty,
+    Obstacle,
+}
+
+impl Tile for Q18Tile {
+    fn traversable(&self) -> bool {
+        matches!(self, Self::Empty)
+    }
+
+    fn cost_from<V>(&self, _other: V) -> f64
+    where
+        V: Tile,
+    {
+        1.0
+    }
+}
 
 fn parse_input(input: &str) -> Vec<(usize, usize)> {
     input
@@ -86,7 +106,25 @@ pub fn get_bytes_shortest_path_length(
     let graph = construct_graph(&falling_bytes, bytes_to_fall, dim);
 
     let path = graph.a_star_search(start, end, heuristic);
-    path.len() - 1 // exclude the start node
+    path.unwrap().len() - 1
+}
+
+pub fn get_bytes_shortest_path_length_grid(
+    input: &str,
+    bytes_to_fall: usize,
+    dim: (usize, usize),
+    start: (usize, usize),
+    end: (usize, usize),
+) -> usize {
+    let falling_bytes = parse_input(input);
+
+    let mut grid = Grid::with_capacity_and_default(dim.0, dim.1, Q18Tile::Empty);
+    for (i, j) in falling_bytes.iter().take(bytes_to_fall) {
+        grid[(*i, *j)] = Q18Tile::Obstacle;
+    }
+
+    let path = grid.a_star_search(start, end, heuristic);
+    path.unwrap().len() - 1
 }
 
 pub fn find_minimum_bytes_to_fall(
@@ -125,7 +163,7 @@ pub fn find_minimum_bytes_to_fall(
         graph.remove_vertex(byte_position);
 
         let path = graph.a_star_search(start, end, heuristic);
-        if path.is_empty() {
+        if path.is_none() {
             return Some((byte_position.1, byte_position.0)); // invert the coordinates
         }
     }
@@ -141,40 +179,16 @@ pub fn find_minimum_bytes_to_fall_parallel(
 ) -> Option<(usize, usize)> {
     let falling_bytes = parse_input(input);
 
-    let mut graph = Graph::new();
-
-    for i in 0..rows {
-        for j in 0..cols {
-            for (dx, dy) in [(0, 1), (1, 0), (0, -1), (-1, 0)] {
-                let new_i = i as isize + dx;
-                let new_j = j as isize + dy;
-
-                if new_i < 0 || new_j < 0 {
-                    continue;
-                }
-
-                let new_i = new_i as usize;
-                let new_j = new_j as usize;
-
-                if new_i >= rows || new_j >= cols {
-                    continue;
-                }
-
-                graph.add_edge((i, j), (new_i, new_j), 1);
-            }
-        }
-    }
-
     (0..falling_bytes.len())
         .into_par_iter()
         .find_first(|idx| {
-            let mut graph = graph.clone();
-            for byte_position in falling_bytes.iter().take(*idx) {
-                graph.remove_vertex(*byte_position);
+            let mut grid = Grid::with_capacity_and_default(rows, cols, Q18Tile::Empty);
+            for (i, j) in falling_bytes.iter().take(*idx) {
+                grid[(*i, *j)] = Q18Tile::Obstacle;
             }
 
-            let path = graph.a_star_search(start, end, heuristic);
-            path.is_empty()
+            let path = grid.a_star_search(start, end, heuristic);
+            path.is_none()
         })
         .map(|byte_position| {
             let byte_position = falling_bytes[byte_position - 1];
@@ -242,6 +256,12 @@ mod tests {
     #[test]
     fn test_get_bytes_shortest_path_length() {
         let result = get_bytes_shortest_path_length(TEST_INPUT, 12, (7, 7), (0, 0), (6, 6));
+        assert_eq!(result, 22);
+    }
+
+    #[test]
+    fn test_get_bytes_shortest_path_length_grid() {
+        let result = get_bytes_shortest_path_length_grid(TEST_INPUT, 12, (7, 7), (0, 0), (6, 6));
         assert_eq!(result, 22);
     }
 
