@@ -3,7 +3,7 @@ name: C
 on:
   push:
     paths:
-      - '*.c'
+      - '**/*.c'
       - '.github/workflows/c.yml'
       - 'test-c/**'
       - 'data/**'
