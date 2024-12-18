@@ -48,6 +48,14 @@ where
     pub fn contains(&self, vertex: &K) -> bool {
         self.vertices.contains(vertex)
     }
+
+    pub fn remove_vertex(&mut self, vertex: K) {
+        self.vertices.remove(&vertex);
+        self.edges.remove(&vertex);
+        for (_, edges) in self.edges.iter_mut() {
+            edges.retain(|(v, _)| v != &vertex);
+        }
+    }
 }
 
 impl<K, W> Index<K> for Graph<K, W>
@@ -88,6 +96,41 @@ where
 impl Weight for f64 {
     fn weight(&self) -> f64 {
         *self
+    }
+}
+
+impl Weight for i32 {
+    fn weight(&self) -> f64 {
+        *self as f64
+    }
+}
+impl Weight for u32 {
+    fn weight(&self) -> f64 {
+        *self as f64
+    }
+}
+
+impl Weight for u64 {
+    fn weight(&self) -> f64 {
+        *self as f64
+    }
+}
+
+impl Weight for usize {
+    fn weight(&self) -> f64 {
+        *self as f64
+    }
+}
+
+impl Weight for f32 {
+    fn weight(&self) -> f64 {
+        *self as f64
+    }
+}
+
+impl Weight for i64 {
+    fn weight(&self) -> f64 {
+        *self as f64
     }
 }
 
@@ -202,5 +245,80 @@ where
         }
 
         graph
+    }
+}
+
+impl<K, W> Graph<K, W>
+where
+    K: Eq + Hash + Clone + Debug,
+    W: Weight + Debug,
+{
+    fn reconstruct_path(&self, came_from: HashMap<K, K>, goal: K) -> Vec<K> {
+        let mut current = goal;
+        let mut path = vec![current.clone()];
+
+        while let Some(next) = came_from.get(&current) {
+            current = next.clone();
+            path.push(current.clone());
+        }
+
+        path.reverse();
+        path
+    }
+
+    pub fn a_star_search<H>(&self, source: K, target: K, heuristic: H) -> Vec<K>
+    where
+        H: Fn(K, K) -> f64,
+    {
+        struct Elem<K>(K, f64);
+        impl<K> PartialEq for Elem<K> {
+            fn eq(&self, other: &Self) -> bool {
+                self.1 == other.1
+            }
+        }
+        impl<K> Eq for Elem<K> {}
+        impl<K> Ord for Elem<K> {
+            fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+                self.1.partial_cmp(&other.1).unwrap().reverse()
+            }
+        }
+
+        impl<K> PartialOrd for Elem<K> {
+            fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+                Some(self.cmp(other))
+            }
+        }
+
+        let mut came_from = HashMap::new();
+        let mut g_score = HashMap::new();
+        let mut f_score = HashMap::new();
+        g_score.insert(source.clone(), 0.0);
+        f_score.insert(source.clone(), heuristic(source.clone(), target.clone()));
+
+        let mut open_set: BinaryHeap<Elem<K>> = BinaryHeap::new();
+        open_set.push(Elem(source.clone(), f_score[&source]));
+
+        while let Some(Elem(v, _)) = open_set.pop() {
+            if v == target {
+                return self.reconstruct_path(came_from, target);
+            }
+
+            if let Some(edges) = self.edges.get(&v) {
+                for (u, w) in edges {
+                    let tenative_g_score = g_score[&v] + w.weight();
+                    if tenative_g_score < *g_score.get(u).unwrap_or(&f64::INFINITY) {
+                        came_from.insert(u.clone(), v.clone());
+                        g_score.insert(u.clone(), tenative_g_score);
+                        f_score.insert(
+                            u.clone(),
+                            tenative_g_score + heuristic(u.clone(), target.clone()),
+                        );
+                        open_set.push(Elem(u.clone(), f_score[u]));
+                    }
+                }
+            }
+        }
+
+        Vec::new()
     }
 }
