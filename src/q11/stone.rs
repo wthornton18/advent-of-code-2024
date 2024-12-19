@@ -15,7 +15,7 @@ impl Stone {
         match self.0 {
             0 => (Stone(1), None),
             n => {
-                let digit_count = (n as f64).log10() as usize + 1;
+                let digit_count = n.ilog10() as usize + 1;
                 if digit_count % 2 == 0 {
                     let half = digit_count / 2;
                     let divisor = 10_usize.pow(half as u32);

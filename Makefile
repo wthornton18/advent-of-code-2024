@@ -84,3 +84,16 @@ q6test: q6
 q6gen_test: q6
 	./q6.o > test-c/q6.exp
 	rm q6.o
+q7: src-c/q7.c
+	$(CC) $(CFLAGS) $< -o $@.o
+q7run: q7
+	./q7.o
+	rm q7.o
+q7test: q7
+	./q7.o > q7.out
+	diff q7.out test-c/q7.exp && echo "Q7 ${TEST_PASSED}" || (echo "Q7 ${TEST_FAILED}" && exit 1)
+	rm q7.out
+	rm q7.o
+q7gen_test: q7
+	./q7.o > test-c/q7.exp
+	rm q7.o

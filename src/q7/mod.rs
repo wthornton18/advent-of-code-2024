@@ -1,4 +1,4 @@
-use equation::{Equation, ValidOperation};
+use equation::{Equation, Operation};
 use rayon::prelude::*;
 
 mod equation;
@@ -15,8 +15,7 @@ fn parse_input(input: &str) -> Vec<Equation> {
 
 pub fn get_satisfiable_equation_target_sum_add_mul(input: &str) -> usize {
     let equations = parse_input(input);
-    let equations =
-        get_satisfiable_equations(&equations, &[ValidOperation::Add, ValidOperation::Multiply]);
+    let equations = get_satisfiable_equations(&equations, &[Operation::Add, Operation::Multiply]);
     equations.iter().map(|eq| eq.target).sum()
 }
 
@@ -24,11 +23,7 @@ pub fn get_satisfiable_equation_target_all(input: &str) -> usize {
     let equations = parse_input(input);
     let equations = get_satisfiable_equations(
         &equations,
-        &[
-            ValidOperation::Add,
-            ValidOperation::Multiply,
-            ValidOperation::Concatenate,
-        ],
+        &[Operation::Add, Operation::Multiply, Operation::Concatenate],
     );
     equations.iter().map(|eq| eq.target).sum()
 }
@@ -37,22 +32,15 @@ pub fn get_satisfiable_equation_target_all_parallel(input: &str) -> usize {
     let equations = parse_input(input);
     let equations = get_satisfiable_equations(
         &equations,
-        &[
-            ValidOperation::Add,
-            ValidOperation::Multiply,
-            ValidOperation::Concatenate,
-        ],
+        &[Operation::Add, Operation::Multiply, Operation::Concatenate],
     );
     equations.par_iter().map(|eq| eq.target).sum()
 }
 
-fn get_satisfiable_equations(
-    equations: &[Equation],
-    operations: &[ValidOperation],
-) -> Vec<Equation> {
+fn get_satisfiable_equations(equations: &[Equation], operations: &[Operation]) -> Vec<Equation> {
     equations
         .iter()
-        .filter(|eq| eq.satisfiable_configurations(operations) > 0)
+        .filter(|eq| eq.is_satisfiable(operations))
         .cloned()
         .collect()
 }
@@ -62,14 +50,14 @@ mod tests {
     use super::*;
 
     const TEST_INPUT: &str = "190: 10 19
-                                      3267: 81 40 27
-                                      83: 17 5
-                                      156: 15 6
-                                      7290: 6 8 6 15
-                                      161011: 16 10 13
-                                      192: 17 8 14
-                                      21037: 9 7 18 13
-                                      292: 11 6 16 20";
+      3267: 81 40 27
+      83: 17 5
+      156: 15 6
+      7290: 6 8 6 15
+      161011: 16 10 13
+      192: 17 8 14
+      21037: 9 7 18 13
+      292: 11 6 16 20";
 
     #[test]
     fn test_get_satisfiable_equation_target_sum_add_mul() {

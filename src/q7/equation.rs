@@ -3,10 +3,23 @@ use std::str::FromStr;
 use itertools::{repeat_n, Itertools};
 
 #[derive(Debug, Clone, Copy)]
-pub enum ValidOperation {
+pub enum Operation {
     Add,
     Multiply,
     Concatenate,
+}
+
+impl Operation {
+    pub fn evaluate(&self, current: usize, next: usize) -> usize {
+        match self {
+            Self::Add => current + next,
+            Self::Multiply => current * next,
+            Self::Concatenate => {
+                let digit_count = next.ilog10() + 1;
+                current * (10_usize.pow(digit_count)) + next
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -15,35 +28,35 @@ pub struct Equation {
     pub numbers: Vec<usize>,
 }
 
+fn is_satisfiable(
+    numbers: &[usize],
+    current: usize,
+    target: usize,
+    valid_ops: &[Operation],
+) -> bool {
+    if numbers.is_empty() {
+        return current == target;
+    }
+
+    if current > target {
+        return false;
+    }
+
+    let next = numbers[0];
+    let slice = &numbers[1..];
+
+    valid_ops
+        .iter()
+        .any(|&op| is_satisfiable(slice, op.evaluate(current, next), target, valid_ops))
+}
+
 impl Equation {
-    pub fn satisfiable_configurations(&self, valid_ops: &[ValidOperation]) -> usize {
-        let total_ops = self.numbers.len() - 1;
-
-        let ops = repeat_n(valid_ops, total_ops)
-            .multi_cartesian_product()
-            .collect::<Vec<_>>();
-
-        let mut count = 0;
-
-        for configuration in ops {
-            let mut result = self.numbers[0];
-            for (i, &op) in configuration.iter().enumerate() {
-                match op {
-                    ValidOperation::Add => result += self.numbers[i + 1],
-                    ValidOperation::Multiply => result *= self.numbers[i + 1],
-                    ValidOperation::Concatenate => {
-                        let str_result = format!("{}{}", result, self.numbers[i + 1]);
-                        result = str_result.parse().unwrap();
-                    }
-                };
-            }
-
-            if result == self.target {
-                count += 1;
-            }
+    pub fn is_satisfiable(&self, valid_ops: &[Operation]) -> bool {
+        if self.numbers.is_empty() {
+            return false;
         }
 
-        count
+        is_satisfiable(&self.numbers[1..], self.numbers[0], self.target, valid_ops)
     }
 }
 

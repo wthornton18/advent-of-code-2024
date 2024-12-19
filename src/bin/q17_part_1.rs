@@ -13,3 +13,15 @@ fn main() {
             .join(",")
     );
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_total_output_from_computer() {
+        let input = read_to_string("data/q17.txt").expect("Failed to read input");
+        let result = get_total_output_from_computer(&input);
+        assert_eq!(result, vec![3, 6, 7, 0, 5, 7, 3, 1, 4]);
+    }
+}
