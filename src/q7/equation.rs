@@ -1,7 +1,5 @@
 use std::str::FromStr;
 
-use itertools::{repeat_n, Itertools};
-
 #[derive(Debug, Clone, Copy)]
 pub enum Operation {
     Add,

@@ -1,5 +1,4 @@
 use computer::Computer;
-use rayon::prelude::*;
 mod computer;
 mod op_code;
 

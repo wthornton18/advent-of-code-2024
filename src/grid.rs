@@ -1,12 +1,8 @@
-use core::f64;
 use std::{
-    collections::BinaryHeap,
     fmt::Display,
     hash::Hash,
     ops::{BitOr, BitOrAssign, Index, IndexMut},
 };
-
-use hashbrown::HashMap;
 
 use crate::a_star_search::AStarSearch;
 
