@@ -4,6 +4,7 @@
 #include <string.h>
 #include <assert.h>
 #include <math.h>
+#include <stdint.h>
 #include "common.h"
 
 typedef struct Equation
@@ -40,7 +41,7 @@ void display_equation(equation eq)
     printf("\n");
 }
 
-static int inline quick_pow_10(int n)
+inline static int quick_pow_10(int n)
 {
     static const int pow_10[] = {
         1, 10, 100, 1000, 10000, 100000, 1000000,
@@ -48,7 +49,7 @@ static int inline quick_pow_10(int n)
     return pow_10[n];
 }
 
-static int inline num_digits(int n)
+inline static int num_digits(int n)
 {
     int places;
     long x;
@@ -56,7 +57,7 @@ static int inline num_digits(int n)
     {
         return 1;
     }
-    for (x = 100, places = 1; (x * 10) < INT64_MAX - 1; x *= 10, places++)
+    for (x = 100, places = 2; (x * 10) < INT64_MAX - 1; x *= 10, places++)
     {
         if (n < x)
         {
@@ -66,7 +67,7 @@ static int inline num_digits(int n)
     return places;
 }
 
-static long inline evaluate(op operation, long current, int next)
+inline static long evaluate(op operation, long current, int next)
 {
     switch (operation)
     {
@@ -81,7 +82,7 @@ static long inline evaluate(op operation, long current, int next)
     }
 }
 
-static int inline is_satisfiable_add_mul(equation eq, long current, int index)
+inline static int is_satisfiable_add_mul(equation eq, long current, int index)
 {
 
     if (index >= eq.values_length)
@@ -102,7 +103,7 @@ static int inline is_satisfiable_add_mul(equation eq, long current, int index)
     return is_satisfiable_add_mul(eq, add, next_index) || is_satisfiable_add_mul(eq, mul, next_index);
 }
 
-static int inline is_satisfiable_add_mul_concat(equation eq, long current, int index)
+inline static int is_satisfiable_add_mul_concat(equation eq, long current, int index)
 {
     if (index >= eq.values_length)
     {

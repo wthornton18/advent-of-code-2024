@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O3 -pedantic -Wall -Wextra -Werror -std=c99 -lm
+CFLAGS=-O3 -Wall -Wextra -std=gnu99 -lm
 TEST_PASSED = PASSED ✅
 TEST_FAILED = FAILED ❌
 
