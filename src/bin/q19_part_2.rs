@@ -13,7 +13,7 @@ mod tests {
 
     #[test]
     fn test_count_possible_towel_arrangements() {
-        let input = read_to_string("data/q19_test.txt").expect("Error reading file");
+        let input = read_to_string("data/q19.txt").expect("Error reading file");
         let result = count_possible_towel_arrangements(&input);
         assert_eq!(result, 848076019766013);
     }
