@@ -258,10 +258,8 @@ where
     type Node = K;
 
     fn weighted_neighbours(&self, node: &Self::Node) -> Option<Vec<(Self::Node, f64)>> {
-        if let Some(edges) = self.edges.get(node) {
-            Some(edges.iter().map(|(v, w)| (v.clone(), w.weight())).collect())
-        } else {
-            None
-        }
+        self.edges
+            .get(node)
+            .map(|edges| edges.iter().map(|(v, w)| (v.clone(), w.weight())).collect())
     }
 }
