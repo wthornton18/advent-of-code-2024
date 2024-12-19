@@ -186,4 +186,17 @@ int free_igrid(igrid *g)
     return 0;
 }
 
+long sum_igrid(igrid *g)
+{
+    long sum = 0;
+    for (int i = 0; i < g->rows; i++)
+    {
+        for (int j = 0; j < g->cols; j++)
+        {
+            sum += get_icell(g, i, j);
+        }
+    }
+    return sum;
+}
+
 #endif

@@ -5,7 +5,7 @@ TEST_FAILED = FAILED ❌
 
 all: q1
 
-test_all: q1test q2test q3test q4test q5test q6test
+test_all: q1test q2test q3test q4test q5test q6test q7test q8test
 
 q1: src-c/q1.c
 	$(CC) $(CFLAGS) $< -o $@.o
@@ -97,3 +97,16 @@ q7test: q7
 q7gen_test: q7
 	./q7.o > test-c/q7.exp
 	rm q7.o
+q8: src-c/q8.c
+	$(CC) $(CFLAGS) $< -o $@.o
+q8run: q8
+	./q8.o
+	rm q8.o
+q8test: q8	
+	./q8.o > q8.out
+	diff q8.out test-c/q8.exp && echo "Q8 ${TEST_PASSED}" || (echo "Q8 ${TEST_FAILED}" && exit 1)
+	rm q8.out
+	rm q8.o
+q8gen_test: q8
+	./q8.o > test-c/q8.exp
+	rm q8.o

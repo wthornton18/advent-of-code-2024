@@ -1,3 +1,5 @@
+use hashbrown::HashSet;
+
 use crate::grid::Grid;
 
 fn parse_input(input: &str) -> Grid<u8> {
@@ -61,7 +63,7 @@ fn generate_antinode_grids(signal_grid: &Grid<u8>, keep_iterating: bool) -> Vec<
         .data
         .iter()
         .filter(|&&v| v != u8::MAX)
-        .collect::<Vec<_>>();
+        .collect::<HashSet<_>>();
 
     let mut antinode_grids = Vec::with_capacity(unique_values.len());
 
