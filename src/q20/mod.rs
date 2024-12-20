@@ -1,7 +1,8 @@
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 
 use crate::a_star_search::AStarSearch;
 use crate::grid::{Grid, Tile};
+use rayon::prelude::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RaceTrack {
@@ -74,7 +75,7 @@ fn get_optimum_path(
 }
 
 fn manhattan_deltas(r: usize) -> HashMap<(i32, i32), usize> {
-    let mut deltas = HashMap::new();
+    let mut deltas = HashMap::with_capacity(r * r * 4);
 
     for i in 0..=r {
         for j in 0..=r {
@@ -104,31 +105,31 @@ pub fn get_total_number_of_cheats(
 ) -> usize {
     let (grid, start, end) = parse_input(input);
     let path = get_optimum_path(&grid, start, end);
-    let mut total_cheats = 0;
 
     let mut path_to_distances = HashMap::with_capacity(path.len());
     for (i, p_a) in path.iter().enumerate() {
         path_to_distances.insert(*p_a, i);
     }
     let deltas = manhattan_deltas(cheat_distance);
-
-    for (i, a) in path.iter().enumerate() {
-        for (delta, distance) in &deltas {
-            let (dx, dy) = delta;
-            let b = (a.0 as i32 + dx, a.1 as i32 + dy);
-            let b = (b.0 as usize, b.1 as usize);
-
-            if let Some(j) = path_to_distances.get(&b) {
-                if *j < (i + distance) {
-                    continue;
-                }
-                if (j - (i + distance)) >= saves_at_least {
-                    total_cheats += 1;
+    path.par_iter()
+        .enumerate()
+        .map(|(i, a)| {
+            let mut total_cheats = 0;
+            for (delta, distance) in &deltas {
+                let (dy, dx) = delta;
+                let b = (a.0 as i32 + dx, a.1 as i32 + dy);
+                let b = (b.0 as usize, b.1 as usize);
+                if let Some(j) = path_to_distances.get(&b) {
+                    if let Some(distance) = j.checked_sub(i + distance) {
+                        if distance >= saves_at_least {
+                            total_cheats += 1;
+                        }
+                    }
                 }
             }
-        }
-    }
-    total_cheats
+            total_cheats
+        })
+        .sum()
 }
 
 #[cfg(test)]
