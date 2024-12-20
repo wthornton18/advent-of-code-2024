@@ -74,8 +74,8 @@ fn get_optimum_path(
         .expect("No path found")
 }
 
-fn manhattan_deltas(r: usize) -> HashMap<(i32, i32), usize> {
-    let mut deltas = HashMap::with_capacity(r * r * 4);
+fn manhattan_deltas(r: usize) -> Vec<((i32, i32), usize)> {
+    let mut deltas = Vec::with_capacity(r * r * 4);
 
     for i in 0..=r {
         for j in 0..=r {
@@ -87,10 +87,15 @@ fn manhattan_deltas(r: usize) -> HashMap<(i32, i32), usize> {
             let i = i as i32;
             let j = j as i32;
             if d <= r {
-                deltas.insert((i, j), d);
-                deltas.insert((i, -j), d);
-                deltas.insert((-i, j), d);
-                deltas.insert((-i, -j), d);
+                deltas.push(((i, j), d));
+                if i != 0 {
+                    deltas.push(((-i, j), d));
+                }
+
+                deltas.push(((i, -j), d));
+                if i != 0 {
+                    deltas.push(((-i, -j), d));
+                }
             }
         }
     }
@@ -106,10 +111,11 @@ pub fn get_total_number_of_cheats(
     let (grid, start, end) = parse_input(input);
     let path = get_optimum_path(&grid, start, end);
 
-    let mut path_to_distances = HashMap::with_capacity(path.len());
+    let mut path_to_distances = Grid::with_capacity_and_default(grid.rows, grid.cols, None);
     for (i, p_a) in path.iter().enumerate() {
-        path_to_distances.insert(*p_a, i);
+        path_to_distances[*p_a] = Some(i);
     }
+
     let deltas = manhattan_deltas(cheat_distance);
     path.par_iter()
         .enumerate()
@@ -119,7 +125,7 @@ pub fn get_total_number_of_cheats(
                 let (dy, dx) = delta;
                 let b = (a.0 as i32 + dx, a.1 as i32 + dy);
                 let b = (b.0 as usize, b.1 as usize);
-                if let Some(j) = path_to_distances.get(&b) {
+                if let Some(j) = path_to_distances.get(b).flatten() {
                     if let Some(distance) = j.checked_sub(i + distance) {
                         if distance >= saves_at_least {
                             total_cheats += 1;
