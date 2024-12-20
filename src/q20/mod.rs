@@ -74,6 +74,7 @@ fn get_optimum_path(
         .expect("No path found")
 }
 
+#[inline(always)]
 fn manhattan_deltas(r: usize) -> Vec<((i32, i32), usize)> {
     let mut deltas = Vec::with_capacity(r * r * 4);
 
@@ -87,19 +88,23 @@ fn manhattan_deltas(r: usize) -> Vec<((i32, i32), usize)> {
             let i = i as i32;
             let j = j as i32;
             if d <= r {
-                deltas.push(((i, j), d));
-                if i != 0 {
+                if !deltas.contains(&((i, j), d)) {
+                    deltas.push(((i, j), d));
+                }
+                if !deltas.contains(&((-i, j), d)) {
                     deltas.push(((-i, j), d));
                 }
 
-                deltas.push(((i, -j), d));
-                if i != 0 {
+                if !deltas.contains(&((i, -j), d)) {
+                    deltas.push(((i, -j), d));
+                }
+
+                if !deltas.contains(&((-i, -j), d)) {
                     deltas.push(((-i, -j), d));
                 }
             }
         }
     }
-
     deltas
 }
 
