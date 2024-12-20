@@ -73,16 +73,25 @@ fn get_optimum_path(
         .expect("No path found")
 }
 
-fn manhattan_deltas(r: usize) -> HashSet<(i32, i32)> {
-    let mut deltas = HashSet::with_capacity(2 * r + 1);
-    for offset in 0..=r {
-        let inv_offset = r - offset;
-        let offset = offset as i32;
-        let inv_offset = inv_offset as i32;
-        deltas.insert((offset, inv_offset));
-        deltas.insert((inv_offset, -offset));
-        deltas.insert((-offset, -inv_offset));
-        deltas.insert((-inv_offset, offset));
+fn manhattan_deltas(r: usize) -> HashMap<(i32, i32), usize> {
+    let mut deltas = HashMap::new();
+
+    for i in 0..=r {
+        for j in 0..=r {
+            if i == 0 && j == 0 {
+                continue;
+            }
+
+            let d = manhattan_distance::<u32>((i, j), (0, 0)) as usize;
+            let i = i as i32;
+            let j = j as i32;
+            if d <= r {
+                deltas.insert((i, j), d);
+                deltas.insert((i, -j), d);
+                deltas.insert((-i, j), d);
+                deltas.insert((-i, -j), d);
+            }
+        }
     }
 
     deltas
@@ -104,16 +113,16 @@ pub fn get_total_number_of_cheats(
     let deltas = manhattan_deltas(cheat_distance);
 
     for (i, a) in path.iter().enumerate() {
-        for delta in &deltas {
+        for (delta, distance) in &deltas {
             let (dx, dy) = delta;
             let b = (a.0 as i32 + dx, a.1 as i32 + dy);
             let b = (b.0 as usize, b.1 as usize);
 
             if let Some(j) = path_to_distances.get(&b) {
-                if *j < (i + cheat_distance) {
+                if *j < (i + distance) {
                     continue;
                 }
-                if (j - (i + cheat_distance)) >= saves_at_least {
+                if (j - (i + distance)) >= saves_at_least {
                     total_cheats += 1;
                 }
             }
