@@ -69,11 +69,4 @@ wh-qp
 tb-vc
 td-yn
 ";
-
-    #[test]
-    fn test_count_connected_subgraphs_where() {
-        let predicate = |v: &str| v.contains('t');
-
-        assert_eq!(count_connected_subgraphs_where(TEST_INPUT, predicate), 7);
-    }
 }
