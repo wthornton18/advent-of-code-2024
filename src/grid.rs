@@ -203,6 +203,18 @@ impl<K: Clone> Grid<K> {
             std::ptr::swap(&mut self[(pos.0, pos.1)], &mut self[(other.0, other.1)]);
         }
     }
+
+    pub fn rotate_90(&self) -> Self {
+        let mut result = Grid::with_capacity(self.cols, self.rows);
+
+        for i in 0..self.rows {
+            for j in 0..self.cols {
+                result[(j, self.rows - i - 1)] = self[(i, j)].clone();
+            }
+        }
+
+        result
+    }
 }
 
 impl<K: Clone> Index<(usize, usize)> for Grid<K> {
