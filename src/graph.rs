@@ -13,7 +13,7 @@ pub trait Weight {
 }
 
 #[derive(Debug, Clone)]
-pub struct Graph<K, W> {
+pub struct Graph<K, W = ()> {
     pub vertices: HashSet<K>,
     pub edges: HashMap<K, Vec<(K, W)>>,
 }
@@ -261,5 +261,58 @@ where
         self.edges
             .get(node)
             .map(|edges| edges.iter().map(|(v, w)| (v.clone(), w.weight())).collect())
+    }
+}
+
+impl<K, W> Graph<K, W>
+where
+    K: Eq + Hash + Clone,
+    W: Clone,
+{
+    pub fn connected_subgraphs(&self) -> Vec<Graph<K, W>> {
+        let mut graphs = Vec::new();
+        let mut visited = HashSet::new();
+        for vertex in self.vertices.iter() {
+            if visited.contains(vertex) {
+                continue;
+            }
+
+            let subgraph = self._connected_subgraphs_bfs(vertex.clone());
+            visited.extend(subgraph.iter().cloned());
+            let mut graph = Graph::new();
+            for v in subgraph.iter() {
+                if let Some(edges) = self.edges.get(v) {
+                    for (u, w) in edges {
+                        if subgraph.contains(u) {
+                            graph.add_edge(v.clone(), u.clone(), w.clone());
+                        }
+                    }
+                }
+            }
+            graphs.push(graph);
+        }
+
+        graphs
+    }
+
+    fn _connected_subgraphs_bfs(&self, start: K) -> HashSet<K> {
+        let mut visited = HashSet::new();
+        let mut queue = vec![start];
+
+        while let Some(vertex) = queue.pop() {
+            if visited.contains(&vertex) {
+                continue;
+            }
+
+            visited.insert(vertex.clone());
+
+            if let Some(edges) = self.edges.get(&vertex) {
+                for (v, _) in edges {
+                    queue.push(v.clone());
+                }
+            }
+        }
+
+        visited
     }
 }
