@@ -14,6 +14,6 @@ mod tests {
     fn test_compute_z_number() {
         let input = include_str!("../../data/q24.txt");
         let result = compute_z_number(input);
-        assert_eq!(result, 507);
+        assert_eq!(result, 60614602965288);
     }
 }

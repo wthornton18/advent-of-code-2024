@@ -5,3 +5,15 @@ fn main() {
     let result = sum_nth_secret_number(input, 2000);
     println!("{}", result);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sum_nth_secret_number() {
+        let input = include_str!("../../data/q22.txt");
+        let result = sum_nth_secret_number(input, 2000);
+        assert_eq!(result, 15303617151);
+    }
+}

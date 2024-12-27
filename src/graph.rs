@@ -58,6 +58,10 @@ where
             edges.retain(|(v, _)| v != &vertex);
         }
     }
+
+    pub fn degree(&self, vertex: &K) -> usize {
+        self.edges.get(vertex).map_or(0, |edges| edges.len())
+    }
 }
 
 impl<K, W> Index<K> for Graph<K, W>
@@ -266,53 +270,103 @@ where
 
 impl<K, W> Graph<K, W>
 where
-    K: Eq + Hash + Clone,
+    K: Eq + Hash + Clone + PartialOrd + Ord,
     W: Clone,
 {
-    pub fn connected_subgraphs(&self) -> Vec<Graph<K, W>> {
-        let mut graphs = Vec::new();
-        let mut visited = HashSet::new();
-        for vertex in self.vertices.iter() {
-            if visited.contains(vertex) {
+    pub fn k_cliques(&self, k: usize) -> HashSet<Vec<K>> {
+        let mut cliques = HashSet::new();
+
+        let mut queue = self
+            .vertices
+            .iter()
+            .map(|v| (v.clone(), vec![v.clone()]))
+            .collect::<Vec<_>>();
+
+        while let Some((v, mut clique)) = queue.pop() {
+            if clique.len() == k {
+                clique.sort();
+                cliques.insert(clique.clone());
                 continue;
             }
 
-            let subgraph = self._connected_subgraphs_bfs(vertex.clone());
-            visited.extend(subgraph.iter().cloned());
-            let mut graph = Graph::new();
-            for v in subgraph.iter() {
-                if let Some(edges) = self.edges.get(v) {
-                    for (u, w) in edges {
-                        if subgraph.contains(u) {
-                            graph.add_edge(v.clone(), u.clone(), w.clone());
+            let edges = self
+                .edges
+                .get(&v)
+                .unwrap_or(&vec![])
+                .iter()
+                .filter_map(|e| {
+                    let (v, _) = e;
+                    let v = v.clone();
+                    for u in &clique {
+                        let u_edges = &self.edges.get(u)?;
+                        if !u_edges.iter().any(|(u, _)| u == &v) {
+                            return None;
                         }
                     }
-                }
+                    Some(v)
+                })
+                .collect::<Vec<_>>();
+
+            for v in edges {
+                let mut new_clique = clique.clone();
+                new_clique.push(v.clone());
+                queue.push((v, new_clique));
             }
-            graphs.push(graph);
         }
 
-        graphs
+        cliques
+    }
+}
+
+impl<K, W> Graph<K, W>
+where
+    K: Eq + Hash + Clone + Ord + PartialOrd,
+    W: Clone,
+{
+    pub fn bron_kerbosh(&self) -> HashSet<K> {
+        let r = HashSet::new();
+        let p = self.vertices.clone();
+        let x = HashSet::new();
+
+        self.bron_kerbosh_helper(r, &mut p.clone(), &mut x.clone())
     }
 
-    fn _connected_subgraphs_bfs(&self, start: K) -> HashSet<K> {
-        let mut visited = HashSet::new();
-        let mut queue = vec![start];
-
-        while let Some(vertex) = queue.pop() {
-            if visited.contains(&vertex) {
-                continue;
-            }
-
-            visited.insert(vertex.clone());
-
-            if let Some(edges) = self.edges.get(&vertex) {
-                for (v, _) in edges {
-                    queue.push(v.clone());
-                }
-            }
+    fn bron_kerbosh_helper(
+        &self,
+        r: HashSet<K>,
+        p: &mut HashSet<K>,
+        x: &mut HashSet<K>,
+    ) -> HashSet<K> {
+        if p.is_empty() && x.is_empty() {
+            return r;
         }
 
-        visited
+        let mut largest_clique = HashSet::new();
+
+        for v in p.clone() {
+            let neighbours = self
+                .edges
+                .get(&v)
+                .unwrap_or(&vec![])
+                .iter()
+                .map(|(v, _)| v.clone())
+                .collect();
+
+            let mut r = r.clone();
+            r.insert(v.clone());
+
+            let mut new_p = p.intersection(&neighbours).cloned().collect::<HashSet<_>>();
+            let mut new_x = x.intersection(&neighbours).cloned().collect::<HashSet<_>>();
+            let result = self.bron_kerbosh_helper(r, &mut new_p, &mut new_x);
+
+            if result.len() > largest_clique.len() {
+                largest_clique = result;
+            }
+
+            p.remove(&v);
+            x.insert(v);
+        }
+
+        largest_clique
     }
 }

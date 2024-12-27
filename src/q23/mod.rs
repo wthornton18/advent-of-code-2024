@@ -1,3 +1,5 @@
+use hashbrown::HashSet;
+
 use crate::graph::Graph;
 
 fn parse_input(input: &str) -> Graph<&str> {
@@ -8,27 +10,38 @@ fn parse_input(input: &str) -> Graph<&str> {
         if line.is_empty() {
             continue;
         }
-        let (u, v) = line.split_once("-").expect("Failed to split line");
-        graph.add_edge(u, v, ());
+        let mut parts = line.split('-');
+        let from = parts.next().unwrap();
+        let to = parts.next().unwrap();
+
+        graph.add_edge(from, to, ());
+        graph.add_edge(to, from, ());
     }
 
     graph
 }
 
-pub fn count_connected_subgraphs_where<F>(input: &str, predicate: F) -> usize
+pub fn t_predicate(clique: &[&str]) -> bool {
+    clique.iter().any(|&node| node.starts_with("t"))
+}
+
+pub fn count_triangle_cliques_where<P>(input: &str, predicate: P) -> usize
 where
-    F: Fn(&str) -> bool,
+    P: Fn(&[&str]) -> bool,
 {
     let graph = parse_input(input);
-    graph
-        .connected_subgraphs()
-        .iter()
-        .filter(|g| {
-            print!("{:?}", g.vertices);
 
-            g.vertices.iter().any(|v| predicate(v)) && g.vertices.len() == 3
-        })
+    graph
+        .k_cliques(3)
+        .iter()
+        .filter(|clique| predicate(clique.as_slice()))
         .count()
+}
+
+pub fn get_largest_clique(input: &str) -> HashSet<&str> {
+    let graph = parse_input(input);
+
+    graph.bron_kerbosh()
 }
 
 #[cfg(test)]
@@ -67,6 +80,17 @@ kh-ta
 co-tc
 wh-qp
 tb-vc
-td-yn
-";
+td-yn";
+
+    #[test]
+    fn test_count_triangle_cliques_where() {
+        let result = count_triangle_cliques_where(TEST_INPUT, t_predicate);
+        assert_eq!(result, 7);
+    }
+
+    #[test]
+    fn test_get_largest_clique() {
+        let result = get_largest_clique(TEST_INPUT);
+        assert_eq!(result.len(), 4);
+    }
 }
