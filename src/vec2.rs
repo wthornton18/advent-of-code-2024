@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Mul, MulAssign, Rem};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Vec2<K: Clone + Copy> {
     pub x: K,
     pub y: K,
@@ -10,9 +10,23 @@ impl<K: Clone + Copy> Vec2<K> {
     pub fn new(x: K, y: K) -> Vec2<K> {
         Vec2 { x, y }
     }
+}
 
-    pub fn as_tuple(&self) -> (K, K) {
-        (self.x, self.y)
+impl<K> From<(K, K)> for Vec2<K>
+where
+    K: Clone + Copy,
+{
+    fn from((x, y): (K, K)) -> Self {
+        Self { x, y }
+    }
+}
+
+impl<K> From<Vec2<K>> for (K, K)
+where
+    K: Clone + Copy,
+{
+    fn from(v: Vec2<K>) -> Self {
+        (v.x, v.y)
     }
 }
 

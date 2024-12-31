@@ -4,7 +4,7 @@ use std::{
     ops::{BitOr, BitOrAssign, Index, IndexMut},
 };
 
-use crate::a_star_search::AStarSearch;
+use crate::{a_star_search::AStarSearch, vec2::Vec2};
 
 #[derive(Default, Clone)]
 pub struct Grid<K: Clone> {
@@ -199,9 +199,8 @@ impl<K: Clone> Grid<K> {
     }
 
     pub fn swap(&mut self, pos: (usize, usize), other: (usize, usize)) {
-        unsafe {
-            std::ptr::swap(&mut self[(pos.0, pos.1)], &mut self[(other.0, other.1)]);
-        }
+        self.data
+            .swap(pos.0 * self.cols + pos.1, other.0 * self.cols + other.1);
     }
 
     pub fn rotate_90(&self) -> Self {
@@ -225,6 +224,14 @@ impl<K: Clone> Index<(usize, usize)> for Grid<K> {
     }
 }
 
+impl<K: Clone> Index<Vec2<usize>> for Grid<K> {
+    type Output = K;
+
+    fn index(&self, Vec2 { x, y }: Vec2<usize>) -> &Self::Output {
+        &self.data[x * self.cols + y]
+    }
+}
+
 impl<K: Clone> Index<std::ops::RangeFrom<usize>> for Grid<K> {
     type Output = [K];
 
@@ -236,6 +243,12 @@ impl<K: Clone> Index<std::ops::RangeFrom<usize>> for Grid<K> {
 impl<K: Clone> IndexMut<(usize, usize)> for Grid<K> {
     fn index_mut(&mut self, (row, col): (usize, usize)) -> &mut Self::Output {
         &mut self.data[row * self.cols + col]
+    }
+}
+
+impl<K: Clone> IndexMut<Vec2<usize>> for Grid<K> {
+    fn index_mut(&mut self, Vec2 { x, y }: Vec2<usize>) -> &mut Self::Output {
+        &mut self.data[x * self.cols + y]
     }
 }
 
