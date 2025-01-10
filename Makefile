@@ -5,7 +5,7 @@ TEST_FAILED = FAILED ❌
 
 all: q1
 
-test_all: q1test q2test q3test q4test q5test q6test q7test q8test
+test_all: q1test q2test q3test q4test q5test q6test q7test q8test q10test
 
 q1: src-c/q1.c
 	$(CC) $(CFLAGS) $< -o $@.o
