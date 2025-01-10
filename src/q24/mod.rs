@@ -1,11 +1,16 @@
-use hashbrown::{HashMap, HashSet};
-use op::Equation;
+use std::{fmt::format, hash::Hash};
 
+use alias::Alias;
+use hashbrown::{HashMap, HashSet};
+use op::{Op, SimpleGate};
+
+mod alias;
+mod heuristic;
 mod op;
 
-fn parse_input<'a>(input: &'a str) -> (HashMap<&'a str, bool>, Vec<Equation<'a>>) {
+fn parse_input(input: &str) -> (HashMap<String, bool>, Vec<SimpleGate>) {
     let mut initial_input = HashMap::new();
-    let mut equations = Vec::new();
+    let mut gates = Vec::new();
     let mut initial_input_section = true;
 
     for line in input.lines() {
@@ -21,30 +26,265 @@ fn parse_input<'a>(input: &'a str) -> (HashMap<&'a str, bool>, Vec<Equation<'a>>
                 .split_once(": ")
                 .expect("Failed to parse initial input");
 
-            initial_input.insert(word.trim(), value == "1");
+            initial_input.insert(word.trim().to_string(), value == "1");
         } else {
             let (input, output) = line.split_once(" -> ").expect("Failed to parse equation");
 
             let input_parts = input.split_whitespace().collect::<Vec<_>>();
 
             let op = match input_parts[1] {
-                "AND" => op::Op::And,
-                "OR" => op::Op::Or,
-                "XOR" => op::Op::Xor,
+                "AND" => Op::And,
+                "OR" => Op::Or,
+                "XOR" => Op::Xor,
                 _ => panic!("Invalid operator"),
             };
 
-            equations.push(Equation::new(input_parts[0], input_parts[2], op, output));
+            gates.push(SimpleGate::new(input_parts[0], input_parts[2], op, output));
         }
     }
 
-    (initial_input, equations)
+    (initial_input, gates)
 }
 
-pub fn compute_z_number<'a>(input: &'a str) -> usize {
-    let (mut initial_wires, equations) = parse_input(input);
+pub fn swap_wires(input: &str) -> Vec<String> {
+    let (_, mut gates) = parse_input(input);
 
-    let output_wires = simulate(initial_wires, equations);
+    let mut renamed_wires = rename_gate_wires(&mut gates);
+
+    let (outputs, renames) = find_outputs_to_swap(&mut gates);
+
+    renamed_wires.extend(renames);
+
+    let mut inverse_renames = HashMap::new();
+
+    for (k, v) in renamed_wires.iter() {
+        inverse_renames.insert(v.clone(), k.clone());
+    }
+
+    let mut outputs = outputs
+        .iter()
+        .map(|output| inverse_renames.get(output).unwrap().to_owned())
+        .collect::<Vec<_>>();
+
+    outputs.dedup();
+    outputs.sort();
+
+    outputs
+}
+
+fn find_outputs_to_swap(gates: &mut [SimpleGate]) -> (Vec<String>, HashMap<String, String>) {
+    let mut outputs = Vec::new();
+    let mut additional_wire_renames = HashMap::new();
+
+    for i in 1..=46 {
+        for heuristic in &[
+            and_heuristic,
+            xor_heuristic,
+            carry_intermediate_heuristic,
+            carry_heuristic,
+            z_heuristic,
+        ] {
+            if let Some((expected, non_matching)) = heuristic(gates, i) {
+                let renames = swap_outputs(gates, &expected, &non_matching);
+                additional_wire_renames.extend(renames);
+                outputs.push(expected);
+                outputs.push(non_matching);
+            }
+        }
+    }
+
+    (outputs, additional_wire_renames)
+}
+
+fn swap_outputs(
+    gates: &mut [SimpleGate],
+    expected: &str,
+    non_matching: &str,
+) -> HashMap<String, String> {
+    // Find gate with the expected output and swap it with the generated output
+    // And find the gate with the generated output and swap it with the expected output
+
+    for gate in gates.iter_mut() {
+        if gate.c == expected {
+            gate.c = non_matching.to_string();
+        } else if gate.c == non_matching {
+            gate.c = expected.to_string();
+        }
+    }
+
+    rename_gate_wires(gates)
+}
+
+fn and_heuristic(gates: &[SimpleGate], n: usize) -> Option<(String, String)> {
+    let expected_output = format!("AND{:0>2}", n);
+    let input_1 = format!("x{:0>2}", n);
+    let input_2 = format!("y{:0>2}", n);
+
+    let mut non_matching_output = None;
+
+    for gate in gates.iter().filter(|g| g.op == Op::And) {
+        let a = gate.a.as_str();
+        let b = gate.b.as_str();
+
+        if (a == input_1 && b == input_2) || (a == input_2 && b == input_1) {
+            if gate.c == expected_output {
+                return None;
+            }
+            non_matching_output = Some(gate.c.clone());
+            break;
+        }
+    }
+
+    let non_matching_output = non_matching_output?;
+
+    Some((expected_output, non_matching_output))
+}
+
+fn xor_heuristic(gates: &[SimpleGate], n: usize) -> Option<(String, String)> {
+    let expected_output = format!("XOR{:0>2}", n);
+    let input_1 = format!("x{:0>2}", n);
+    let input_2 = format!("y{:0>2}", n);
+
+    let mut non_matching_output = None;
+
+    for gate in gates.iter().filter(|g| g.op == Op::Xor) {
+        let a = gate.a.as_str();
+        let b = gate.b.as_str();
+
+        if (a == input_1 && b == input_2) || (a == input_2 && b == input_1) {
+            if gate.c == expected_output {
+                return None;
+            }
+            non_matching_output = Some(gate.c.clone());
+            break;
+        }
+    }
+
+    let non_matching_output = non_matching_output?;
+
+    Some((expected_output, non_matching_output))
+}
+fn carry_intermediate_heuristic(gates: &[SimpleGate], n: usize) -> Option<(String, String)> {
+    let expected_output = format!("CARRY_INTERMEDIATE{:0>2}", n);
+    let input_1 = format!("XOR{:0>2}", n);
+    let input_2 = format!("CARRY{:0>2}", n - 1);
+
+    let mut non_matching_output = None;
+
+    for gate in gates.iter().filter(|g| g.op == Op::And) {
+        let a = gate.a.as_str();
+        let b = gate.b.as_str();
+
+        if (a == input_1 && b == input_2) || (a == input_2 && b == input_1) {
+            if gate.c == expected_output {
+                return None;
+            }
+            non_matching_output = Some(gate.c.clone());
+            break;
+        }
+    }
+
+    let non_matching_output = non_matching_output?;
+
+    Some((expected_output, non_matching_output))
+}
+
+fn carry_heuristic(gates: &[SimpleGate], n: usize) -> Option<(String, String)> {
+    let expected_output = format!("CARRY{:0>2}", n);
+    let input_1 = format!("CARRY_INTERMEDIATE{:0>2}", n);
+    let input_2 = format!("AND{:0>2}", n);
+
+    let mut non_matching_output = None;
+
+    for gate in gates.iter().filter(|g| g.op == Op::Or) {
+        let a = gate.a.as_str();
+        let b = gate.b.as_str();
+
+        if (a == input_1 && b == input_2) || (a == input_2 && b == input_1) {
+            if gate.c == expected_output {
+                return None;
+            }
+            non_matching_output = Some(gate.c.clone());
+            break;
+        }
+    }
+
+    let non_matching_output = non_matching_output?;
+
+    Some((expected_output, non_matching_output))
+}
+
+fn z_heuristic(gates: &[SimpleGate], n: usize) -> Option<(String, String)> {
+    let expected_output = format!("z{:0>2}", n);
+    let input_1 = format!("CARRY{:0>2}", n);
+    let input_2 = format!("XOR{:0>2}", n);
+
+    let mut non_matching_output = None;
+
+    for gate in gates.iter().filter(|g| g.op == Op::Xor) {
+        let a = gate.a.as_str();
+        let b = gate.b.as_str();
+
+        if (a == input_1 && b == input_2) || (a == input_2 && b == input_1) {
+            if gate.c == expected_output {
+                return None;
+            }
+            non_matching_output = Some(gate.c.clone());
+            break;
+        }
+    }
+
+    let non_matching_output = non_matching_output?;
+
+    Some((expected_output, non_matching_output))
+}
+
+fn rename_gate_wires(gates: &mut [SimpleGate]) -> HashMap<String, String> {
+    let mut renamed_wires = HashMap::new();
+
+    Alias::new("x(N)", Op::And, "y(N)", "AND(N)").alias(gates, &mut renamed_wires);
+    Alias::new("x(N)", Op::Xor, "y(N)", "XOR(N)").alias(gates, &mut renamed_wires);
+
+    let and_00_original_wire = renamed_wires
+        .iter()
+        .find(|(_, v)| *v == "AND00")
+        .map(|(k, _)| k.clone())
+        .expect("Failed to find original wire for AND00");
+
+    // Rename all occurences of AND00 and the original wire to CARRY00
+
+    renamed_wires.insert(and_00_original_wire.clone(), "CARRY00".to_string());
+
+    for gate in gates.iter_mut() {
+        if gate.a == "AND00" {
+            gate.a = "CARRY00".to_string();
+        }
+        if gate.b == "AND00" {
+            gate.b = "CARRY00".to_string();
+        }
+
+        if gate.c == "AND00" {
+            gate.c = "CARRY00".to_string();
+        }
+    }
+
+    Alias::new("XOR(N)", Op::And, "CARRY(N-1)", "CARRY_INTERMEDIATE(N)")
+        .alias(gates, &mut renamed_wires);
+
+    Alias::new("AND(N)", Op::Or, "CARRY_INTERMEDIATE(N)", "CARRY(N)")
+        .alias(gates, &mut renamed_wires);
+
+    for g in gates {
+        println!("{}", g);
+    }
+
+    renamed_wires
+}
+
+pub fn compute_z_number(input: &str) -> usize {
+    let (initial_wires, gates) = parse_input(input);
+
+    let output_wires = simulate(initial_wires, gates);
 
     let mut z = 0;
 
@@ -58,28 +298,24 @@ pub fn compute_z_number<'a>(input: &'a str) -> usize {
     z
 }
 
-fn simulate<'a>(
-    mut input: HashMap<&'a str, bool>,
-    equations: Vec<Equation<'a>>,
-) -> HashMap<&'a str, bool> {
+fn simulate<'a>(mut input: HashMap<String, bool>, gates: Vec<SimpleGate>) -> HashMap<String, bool> {
     let mut seen = HashSet::new();
     loop {
         let mut updated = false;
 
-        for equation in equations.iter() {
-            if input.contains_key(equation.w_1)
-                && input.contains_key(equation.w_2)
-                && !seen.contains(&equation)
-            {
-                let w_1 = input[equation.w_1];
-                let w_2 = input[equation.w_2];
+        for gate in gates.iter() {
+            let g_a = gate.a.as_str();
+            let g_b = gate.b.as_str();
+            if input.contains_key(g_a) && input.contains_key(g_b) && !seen.contains(&gate) {
+                let a = input[g_a];
+                let b = input[g_b];
 
-                let result = equation.evaluate(w_1, w_2);
+                let result = gate.evaluate(a, b);
 
                 updated = true;
 
-                input.insert(equation.out, result);
-                seen.insert(equation);
+                input.insert(gate.c.clone(), result);
+                seen.insert(gate);
             }
         }
 

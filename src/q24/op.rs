@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Op {
     And,
@@ -5,26 +7,47 @@ pub enum Op {
     Xor,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct Equation<'a> {
-    pub w_1: &'a str,
-    pub w_2: &'a str,
-    pub out: &'a str,
-    pub op: Op,
-}
-
-impl<'a> Equation<'a> {
-    pub fn new(w_1: &'a str, w_2: &'a str, op: Op, out: &'a str) -> Self {
-        Self { w_1, w_2, op, out }
+impl Display for Op {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Op::And => write!(f, "AND"),
+            Op::Or => write!(f, "OR"),
+            Op::Xor => write!(f, "XOR"),
+        }
     }
 }
 
-impl Equation<'_> {
-    pub fn evaluate(&self, w_1: bool, w_2: bool) -> bool {
-        match self.op {
-            Op::And => w_1 && w_2,
-            Op::Or => w_1 || w_2,
-            Op::Xor => w_1 ^ w_2,
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SimpleGate {
+    pub a: String,
+    pub b: String,
+    pub c: String,
+    pub op: Op,
+}
+
+impl SimpleGate {
+    pub fn new(a: &str, b: &str, op: Op, c: &str) -> Self {
+        Self {
+            a: a.to_string(),
+            b: b.to_string(),
+            op,
+            c: c.to_string(),
         }
+    }
+}
+
+impl SimpleGate {
+    pub fn evaluate(&self, a: bool, b: bool) -> bool {
+        match self.op {
+            Op::And => a && b,
+            Op::Or => a || b,
+            Op::Xor => a ^ b,
+        }
+    }
+}
+
+impl Display for SimpleGate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {} {} -> {}", self.a, self.op, self.b, self.c)
     }
 }
