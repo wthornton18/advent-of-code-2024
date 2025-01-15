@@ -123,3 +123,16 @@ q10test: q10
 q10gen_test: q10
 	./q10.o > test-c/q10.exp
 	rm q10.o
+q11: src-c/q11.c
+	$(CC) $(CFLAGS) $< -o $@.o
+q11run: q11
+	./q11.o
+	rm q11.o
+q11test: q11
+	./q11.o > q11.out
+	diff q11.out test-c/q11.exp && echo "Q11 ${TEST_PASSED}" || (echo "Q11 ${TEST_FAILED}" && exit 1)
+	rm q11.out
+	rm q11.o
+q11gen_test: q11
+	./q11.o > test-c/q11.exp
+	rm q11.o

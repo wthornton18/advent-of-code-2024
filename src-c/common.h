@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #ifndef COMMON_H
 #define COMMON_H
@@ -51,4 +52,12 @@ int read_file_to_buffer(char **buffer, char *filename, long *length)
 
     return 0;
 }
+
+#define optional_type(type) \
+    struct                  \
+    {                       \
+        bool present;       \
+        type value;         \
+    }
+
 #endif
