@@ -106,6 +106,40 @@
 #define vec_get(name, v, index) vec_get_##name(v, index)
 #define vec_length(name, v) vec_length_##name(v)
 
+/*! function
+    @abstract Iterate over a vector
+    @param name: The name of the vector
+    @param v: Pointer to the vector
+    @param value: Variable to which the value will be assigned
+    @param code: Block of code to execute
+*/
+#define vec_foreach(name, v, value, code)    \
+    {                                        \
+        for (size_t i = 0; i < v->size; i++) \
+        {                                    \
+            vecval_t value = v->data[i];     \
+            code;                            \
+        }                                    \
+    }
+
+/*! function
+    @abstract Iterate over a vector with index
+    @param name: The name of the vector
+    @param v: Pointer to the vector
+    @param index: Variable to which the index will be assigned
+    @param value: Variable to which the value will be assigned
+    @param code: Block of code to execute
+*/
+#define vec_foreach_index(name, v, index, value, code) \
+    {                                                  \
+        for (size_t __i = 0; __i < v->size; __i++)     \
+        {                                              \
+            size_t index = __i;                        \
+            vecval_t value = v->data[__i];             \
+            code;                                      \
+        }                                              \
+    }
+
 #define VEC_DECLARE(name, vecval_t) \
     __VEC_TYPE(name, vecval_t)      \
     __VEC_IMPL(name, static inline __attribute__((__unused__)), vecval_t)

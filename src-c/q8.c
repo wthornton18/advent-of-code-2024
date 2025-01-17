@@ -5,7 +5,10 @@
 #include <assert.h>
 #include <math.h>
 #include "common.h"
-#include "old_grid.h"
+#include "grid.h"
+
+GRID_DECLARE(c, char)
+GRID_DELCARE_INT(antinode)
 
 typedef struct Pos
 {
@@ -31,7 +34,7 @@ pos mul(pos a, int scalar)
     return result;
 }
 
-int parse_input(char *buffer, long length, cgrid *grid)
+int parse_input(char *buffer, long length, grid_t(c) * grid)
 {
     assert(buffer != 0);
     assert(length > 0);
@@ -68,7 +71,7 @@ int parse_input(char *buffer, long length, cgrid *grid)
     {
         for (int j = 0; j < cols; j++)
         {
-            set_ccell(grid, i, j, '.');
+            grid_set(c, grid, i, j, '.');
         }
     }
 
@@ -80,7 +83,7 @@ int parse_input(char *buffer, long length, cgrid *grid)
 
         for (int i = 0; i < cols; i++)
         {
-            set_ccell(grid, row, i, line[i]);
+            grid_set(c, grid, row, i, line[i]);
         }
 
         line = strtok(NULL, "\n");
@@ -89,12 +92,8 @@ int parse_input(char *buffer, long length, cgrid *grid)
 
     return 0;
 }
-int generate_antinodes(igrid *antinode_grid, pos *valid_positions, int valid_positions_length, int keep_iterating)
+int generate_antinodes(grid_t(antinode) * antinode_grid, pos *valid_positions, int valid_positions_length, int keep_iterating)
 {
-    if (keep_iterating)
-    {
-        // do something
-    }
     for (int i = 0; i < valid_positions_length; i++)
     {
         for (int j = 0; (j < valid_positions_length); j++)
@@ -113,12 +112,12 @@ int generate_antinodes(igrid *antinode_grid, pos *valid_positions, int valid_pos
             {
                 pos a = sub(x_i, mul(d, k));
 
-                if (a.x < 0 || a.y < 0 || a.x >= antinode_grid->rows || a.y >= antinode_grid->cols)
+                if (a.x < 0 || a.y < 0 || a.x >= (int)antinode_grid->rows || a.y >= (int)antinode_grid->cols)
                 {
                     break;
                 }
 
-                set_icell(antinode_grid, a.x, a.y, 1);
+                grid_set(antinode, antinode_grid, a.x, a.y, 1);
                 k++;
             } while (keep_iterating);
         }
@@ -126,11 +125,11 @@ int generate_antinodes(igrid *antinode_grid, pos *valid_positions, int valid_pos
     return 0;
 }
 
-int count_unique_antinodes(cgrid *grid, int keep_iterating)
+int count_unique_antinodes(grid_t(c) * grid, int keep_iterating)
 {
 
-    igrid antinode_grid = {0};
-    allocated_and_default_igrid(&antinode_grid, grid->rows, grid->cols, 0);
+    grid_t(antinode) *antinode_grid = grid_init_with_dimensions_and_default(antinode, grid->rows, grid->cols, 0);
+
     int unique_chars[62] = {0};
 
     for (int i = 0; i < 62; i++)
@@ -138,11 +137,11 @@ int count_unique_antinodes(cgrid *grid, int keep_iterating)
         unique_chars[i] = 0;
     }
 
-    for (int i = 0; i < grid->rows; i++)
+    for (size_t i = 0; i < grid->rows; i++)
     {
-        for (int j = 0; j < grid->cols; j++)
+        for (size_t j = 0; j < grid->cols; j++)
         {
-            char c = get_ccell(grid, i, j);
+            char c = grid_get(c, grid, i, j);
             if (c == '.')
             {
                 continue;
@@ -191,11 +190,11 @@ int count_unique_antinodes(cgrid *grid, int keep_iterating)
         }
 
         int valid_positions_length = 0;
-        for (int j = 0; j < grid->rows; j++)
+        for (size_t j = 0; j < grid->rows; j++)
         {
-            for (int k = 0; k < grid->cols; k++)
+            for (size_t k = 0; k < grid->cols; k++)
             {
-                if (get_ccell(grid, j, k) == c)
+                if (grid_get(c, grid, j, k) == c)
                 {
                     pos p = {j, k};
                     valid_positions[valid_positions_length] = p;
@@ -204,11 +203,11 @@ int count_unique_antinodes(cgrid *grid, int keep_iterating)
             }
         }
 
-        generate_antinodes(&antinode_grid, valid_positions, valid_positions_length, keep_iterating);
+        generate_antinodes(antinode_grid, valid_positions, valid_positions_length, keep_iterating);
         free(valid_positions);
     }
-    int sum = sum_igrid(&antinode_grid);
-    free_igrid(&antinode_grid);
+    int sum = grid_sum(antinode, antinode_grid);
+    grid_free(antinode, antinode_grid);
     return sum;
 }
 
@@ -217,7 +216,7 @@ int main(void)
     char *buffer = 0;
     long length;
 
-    cgrid signal_grid = {0};
+    grid_t(c) signal_grid = {0};
 
     int err = read_file_to_buffer(&buffer, "data/q8.txt", &length);
     if (err != 0)

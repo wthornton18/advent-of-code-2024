@@ -188,7 +188,7 @@ int compute_guard_path(grid_t(c) * g, int guard_x, int guard_y)
             errno = next;
             return next;
         }
-        if (new_x < 0 || new_x >= g->cols || new_y < 0 || new_y >= g->rows)
+        if (new_x < 0 || new_x >= (int)g->cols || new_y < 0 || new_y >= (int)g->rows)
         {
             break;
         }
@@ -236,7 +236,7 @@ int contains_cycle(grid_t(c) * c, int guard_x, int guard_y)
             errno = next;
             break;
         }
-        if (new_x < 0 || new_x >= c->cols || new_y < 0 || new_y >= c->rows)
+        if (new_x < 0 || new_x >= (int)c->cols || new_y < 0 || new_y >= (int)c->rows)
         {
 
             break;
@@ -273,39 +273,32 @@ int contains_cycle(grid_t(c) * c, int guard_x, int guard_y)
 int get_total_number_of_cycles(grid_t(c) * c, int guard_x, int guard_y)
 {
     int cycles = 0;
-    for (int i = 0; i < grid_rows(c, c); i++)
-    {
-        for (int j = 0; j < grid_cols(c, c); j++)
+    char value;
+    size_t i, j;
+    grid_enumerate(c, c, value, i, j, {
+        if (value == EMPTY_CELL)
         {
-
-            if (grid_get(c, c, i, j) == EMPTY_CELL)
+            grid_set(c, c, i, j, OBSTACLE);
+            int cycle = contains_cycle(c, guard_x, guard_y);
+            if (cycle == 1)
             {
-                grid_set(c, c, i, j, OBSTACLE);
-                int cycle = contains_cycle(c, guard_x, guard_y);
-                if (cycle == 1)
-                {
-                    cycles++;
-                }
-                grid_set(c, c, i, j, EMPTY_CELL);
+                cycles++;
             }
-        }
-    }
+            grid_set(c, c, i, j, EMPTY_CELL);
+        } });
     return cycles;
 }
 
 int count_traversed_cells(grid_t(c) * g)
 {
     int count = 0;
-    for (int i = 0; i < grid_rows(c, g); i++)
-    {
-        for (int j = 0; j < g->cols; j++)
+    char value;
+    grid_foreach(c, g, value, {
+        if (value == TRAVERSED)
         {
-            if (grid_get(c, g, i, j) == TRAVERSED)
-            {
-                count++;
-            }
+            count++;
         }
-    }
+    });
     return count;
 }
 
