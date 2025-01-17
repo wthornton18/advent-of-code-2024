@@ -15,13 +15,6 @@
         vecval_t *data;            \
     } vec_##name##_t;
 
-// typedef struct vec_my_vec_s
-// {
-//     size_t size;
-//     size_t capacity;
-//     int *data;
-// } vec_my_vec_t;
-
 #define __VEC_IMPL(name, SCOPE, vecval_t)                                           \
     SCOPE vec_##name##_t *vec_init_##name(void)                                     \
     {                                                                               \

@@ -5,8 +5,12 @@
 #include <assert.h>
 #include <math.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "common.h"
-#include "old_grid.h"
+#include "grid.h"
+
+GRID_DECLARE(i, int)
+GRID_DECLARE(b, bool)
 
 typedef struct Pos
 {
@@ -87,7 +91,7 @@ node popright(queue *q)
     return *n;
 }
 
-int parse_input(char *buffer, long length, igrid *g)
+int parse_input(char *buffer, long length, grid_t(i) * *g)
 {
     assert(buffer != 0);
     assert(length > 0);
@@ -111,21 +115,12 @@ int parse_input(char *buffer, long length, igrid *g)
         cols++;
     }
 
-    g->rows = rows;
-    g->cols = cols;
-    g->data = malloc(rows * cols * sizeof(int));
-    if (!g->data)
+    *g = grid_init_with_dimensions_and_default(i, rows, cols, 0);
+
+    if (!g)
     {
         errno = ENOMEM;
         return ENOMEM;
-    }
-
-    for (int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < cols; j++)
-        {
-            set_icell(g, i, j, 0);
-        }
     }
 
     char *line = strtok(buffer, "\n");
@@ -135,7 +130,7 @@ int parse_input(char *buffer, long length, igrid *g)
     {
         for (int i = 0; i < cols; i++)
         {
-            set_icell(g, row, i, line[i] - '0');
+            grid_set(i, *g, row, i, line[i] - '0');
         }
 
         line = strtok(NULL, "\n");
@@ -145,7 +140,7 @@ int parse_input(char *buffer, long length, igrid *g)
     return 0;
 }
 
-int get_trailhead_score(igrid g, pos trailhead)
+int get_trailhead_score(grid_t(i) * g, pos trailhead)
 {
     int trailhead_score = 0;
 
@@ -153,8 +148,7 @@ int get_trailhead_score(igrid g, pos trailhead)
 
     enqueue(q, trailhead);
 
-    igrid discovered = {0};
-    allocated_and_default_igrid(&discovered, g.rows, g.cols, 0);
+    grid_t(b) *discovered = grid_init_with_dimensions_and_default(b, g->rows, g->cols, false);
 
     while (1)
     {
@@ -166,14 +160,14 @@ int get_trailhead_score(igrid g, pos trailhead)
         }
         pos p = popright(q).value;
 
-        if (get_icell(&discovered, p.x, p.y) == 1)
+        if (grid_get(b, discovered, p.x, p.y) == true)
         {
             continue;
         }
 
-        set_icell(&discovered, p.x, p.y, 1);
+        grid_set(b, discovered, p.x, p.y, true);
 
-        int v = get_icell(&g, p.x, p.y);
+        int v = grid_get(i, g, p.x, p.y);
 
         if (v == 9)
         {
@@ -185,22 +179,23 @@ int get_trailhead_score(igrid g, pos trailhead)
             pos direction = directions[i];
             pos new_pos = {p.x + direction.x, p.y + direction.y};
 
-            if (new_pos.x < 0 || new_pos.y < 0 || new_pos.x >= g.rows || new_pos.y >= g.cols)
+            if (new_pos.x < 0 || new_pos.y < 0 || new_pos.x >= (int)g->rows || new_pos.y >= (int)g->cols)
             {
                 continue;
             }
 
-            if (get_icell(&g, new_pos.x, new_pos.y) - v == 1)
+            if (grid_get(i, g, new_pos.x, new_pos.y) - v == 1)
             {
                 enqueue(q, new_pos);
             }
         }
     }
 
+    grid_free(b, discovered);
     return trailhead_score;
 }
 
-int get_trailhead_rating(igrid g, pos trailhead)
+int get_trailhead_rating(grid_t(i) * g, pos trailhead)
 {
     int trailhead_rating = 0;
     queue *q = new ();
@@ -216,7 +211,7 @@ int get_trailhead_rating(igrid g, pos trailhead)
 
         pos p = popright(q).value;
 
-        int v = get_icell(&g, p.x, p.y);
+        int v = grid_get(i, g, p.x, p.y);
 
         if (v == 9)
         {
@@ -228,12 +223,12 @@ int get_trailhead_rating(igrid g, pos trailhead)
             pos direction = directions[i];
             pos new_pos = {p.x + direction.x, p.y + direction.y};
 
-            if (new_pos.x < 0 || new_pos.y < 0 || new_pos.x >= g.rows || new_pos.y >= g.cols)
+            if (new_pos.x < 0 || new_pos.y < 0 || new_pos.x >= (int)g->rows || new_pos.y >= (int)g->cols)
             {
                 continue;
             }
 
-            if (get_icell(&g, new_pos.x, new_pos.y) - v == 1)
+            if (grid_get(i, g, new_pos.x, new_pos.y) - v == 1)
             {
                 enqueue(q, new_pos);
             }
@@ -243,16 +238,16 @@ int get_trailhead_rating(igrid g, pos trailhead)
     return trailhead_rating;
 }
 
-int get_total_trailhead_score(igrid g)
+int get_total_trailhead_score(grid_t(i) * g)
 {
 
     int trailhead_score = 0;
 
-    for (int i = 0; i < g.rows; i++)
+    for (size_t i = 0; i < g->rows; i++)
     {
-        for (int j = 0; j < g.cols; j++)
+        for (size_t j = 0; j < g->cols; j++)
         {
-            if (get_icell(&g, i, j) == 0)
+            if (grid_get(i, g, i, j) == 0)
             {
                 pos trailhead = {i, j};
                 int score = get_trailhead_score(g, trailhead);
@@ -264,15 +259,15 @@ int get_total_trailhead_score(igrid g)
     return trailhead_score;
 }
 
-int get_total_trailhead_rating(igrid g)
+int get_total_trailhead_rating(grid_t(i) * g)
 {
     int trailhead_rating = 0;
 
-    for (int i = 0; i < g.rows; i++)
+    for (size_t i = 0; i < g->rows; i++)
     {
-        for (int j = 0; j < g.cols; j++)
+        for (size_t j = 0; j < g->cols; j++)
         {
-            if (get_icell(&g, i, j) == 0)
+            if (grid_get(i, g, i, j) == 0)
             {
                 pos trailhead = {i, j};
                 int rating = get_trailhead_rating(g, trailhead);
@@ -289,7 +284,7 @@ int main(void)
     char *buffer = 0;
     long length;
 
-    igrid grid;
+    grid_t(i) *grid = 0;
 
     int read = read_file_to_buffer(&buffer, "data/q10.txt", &length);
 
