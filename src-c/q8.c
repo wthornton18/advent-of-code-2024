@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <math.h>
 #include "common.h"
-#include "grid.h"
+#include "old_grid.h"
 
 typedef struct Pos
 {

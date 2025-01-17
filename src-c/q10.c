@@ -6,7 +6,7 @@
 #include <math.h>
 #include <stdint.h>
 #include "common.h"
-#include "grid.h"
+#include "old_grid.h"
 
 typedef struct Pos
 {

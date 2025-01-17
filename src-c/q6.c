@@ -3,8 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 #include "common.h"
 #include "grid.h"
+
+GRID_DECLARE(c, char)
+GRID_DECLARE(dir, int)
 
 typedef enum Direction
 {
@@ -87,7 +91,7 @@ int print_direction(direction d)
     return 0;
 }
 
-int parse_input(char *buffer, long length, cgrid *g, int *guard_x, int *guard_y)
+int parse_input(char *buffer, long length, grid_t(c) * g, int *guard_x, int *guard_y)
 {
     assert(buffer);
     assert(length > 0);
@@ -143,11 +147,11 @@ int parse_input(char *buffer, long length, cgrid *g, int *guard_x, int *guard_y)
         {
             *guard_x = cgrid_row;
             *guard_y = cgrid_col;
-            set_ccell(g, cgrid_row, cgrid_col, EMPTY_CELL);
+            grid_set(c, g, cgrid_row, cgrid_col, EMPTY_CELL);
         }
         else if (buffer[i] == EMPTY_CELL || buffer[i] == OBSTACLE)
         {
-            set_ccell(g, cgrid_row, cgrid_col, buffer[i]);
+            grid_set(c, g, cgrid_row, cgrid_col, buffer[i]);
         }
         else
         {
@@ -161,7 +165,7 @@ int parse_input(char *buffer, long length, cgrid *g, int *guard_x, int *guard_y)
     return 0;
 }
 
-int compute_guard_path(cgrid *g, int guard_x, int guard_y)
+int compute_guard_path(grid_t(c) * g, int guard_x, int guard_y)
 {
     int position_x = guard_x;
     int position_y = guard_y;
@@ -170,9 +174,9 @@ int compute_guard_path(cgrid *g, int guard_x, int guard_y)
     while (1)
     {
 
-        if (get_ccell(g, position_x, position_y) == EMPTY_CELL)
+        if (grid_get(c, g, position_x, position_y) == EMPTY_CELL)
         {
-            set_ccell(g, position_x, position_y, TRAVERSED);
+            grid_set(c, g, position_x, position_y, TRAVERSED);
         }
 
         int new_x;
@@ -189,7 +193,7 @@ int compute_guard_path(cgrid *g, int guard_x, int guard_y)
             break;
         }
 
-        char next_cell = get_ccell(g, new_x, new_y);
+        char next_cell = grid_get(c, g, new_x, new_y);
         if (next_cell == EMPTY_CELL || next_cell == TRAVERSED)
         {
             position_x = new_x;
@@ -204,20 +208,20 @@ int compute_guard_path(cgrid *g, int guard_x, int guard_y)
     return 0;
 }
 
-int contains_cycle(cgrid *c, int guard_x, int guard_y)
+int contains_cycle(grid_t(c) * c, int guard_x, int guard_y)
 {
     int position_x = guard_x;
     int position_y = guard_y;
     direction d = UP;
 
-    igrid dir_grid = {0};
-    int res = allocated_and_default_igrid(&dir_grid, c->rows, c->cols, 0);
-    if (res != 0)
+    grid_t(dir) *dir_grid = grid_init_with_dimensions_and_default(dir, c->rows, c->cols, 0);
+    if (dir_grid == NULL)
     {
-        errno = res;
+        errno = ENOMEM;
         return 0;
     }
-    set_icell(&dir_grid, position_x, position_y, d);
+
+    grid_set(dir, dir_grid, position_x, position_y, d);
 
     while (1)
     {
@@ -238,7 +242,7 @@ int contains_cycle(cgrid *c, int guard_x, int guard_y)
             break;
         }
 
-        char next_cell = get_ccell(c, new_x, new_y);
+        char next_cell = grid_get(c, c, new_x, new_y);
         if (next_cell == EMPTY_CELL || next_cell == TRAVERSED)
         {
             position_x = new_x;
@@ -249,53 +253,54 @@ int contains_cycle(cgrid *c, int guard_x, int guard_y)
             d = rotate_90(d);
         }
 
-        int dir = get_icell(&dir_grid, position_x, position_y);
+        int dir = grid_get(dir, dir_grid, position_x, position_y);
 
         if ((dir & d) != 0)
         {
-            free_igrid(&dir_grid);
+            grid_free(dir, dir_grid);
             return 1;
         }
 
         dir |= d;
-        set_icell(&dir_grid, position_x, position_y, dir);
+
+        grid_set(dir, dir_grid, position_x, position_y, dir);
     }
-    free_igrid(&dir_grid);
+    grid_free(dir, dir_grid);
 
     return 0;
 }
 
-int get_total_number_of_cycles(cgrid *c, int guard_x, int guard_y)
+int get_total_number_of_cycles(grid_t(c) * c, int guard_x, int guard_y)
 {
     int cycles = 0;
-    for (int i = 0; i < c->rows; i++)
+    for (int i = 0; i < grid_rows(c, c); i++)
     {
-        for (int j = 0; j < c->cols; j++)
+        for (int j = 0; j < grid_cols(c, c); j++)
         {
 
-            if (get_ccell(c, i, j) == EMPTY_CELL)
+            if (grid_get(c, c, i, j) == EMPTY_CELL)
             {
-                set_ccell(c, i, j, OBSTACLE);
+                grid_set(c, c, i, j, OBSTACLE);
                 int cycle = contains_cycle(c, guard_x, guard_y);
                 if (cycle == 1)
                 {
                     cycles++;
                 }
-                set_ccell(c, i, j, EMPTY_CELL);
+                grid_set(c, c, i, j, EMPTY_CELL);
             }
         }
     }
     return cycles;
 }
 
-int count_traversed_cells(cgrid *g)
+int count_traversed_cells(grid_t(c) * g)
 {
     int count = 0;
-    for (int i = 0; i < g->rows; i++)
+    for (int i = 0; i < grid_rows(c, g); i++)
     {
         for (int j = 0; j < g->cols; j++)
         {
-            if (get_ccell(g, i, j) == TRAVERSED)
+            if (grid_get(c, g, i, j) == TRAVERSED)
             {
                 count++;
             }
@@ -309,7 +314,7 @@ int main(void)
     long length;
     char *buffer = 0;
 
-    cgrid g = {0};
+    grid_t(c) g = {0};
     int guard_x = 0;
     int guard_y = 0;
 
@@ -328,8 +333,8 @@ int main(void)
         return errno;
     }
 
-    cgrid g_copy = {0};
-    int copy = copy_cgrid(&g, &g_copy);
+    grid_t(c) g_copy = {0};
+    int copy = grid_copy(c, &g, &g_copy);
     if (copy != 0)
     {
         printf("Error: %s\n", strerror(errno));
